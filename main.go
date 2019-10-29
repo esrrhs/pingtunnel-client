@@ -90,7 +90,7 @@ func main() {
 			tcpstatw.SetEnabled(true)
 
 		} else {
-			sock5w.SetEnabled(false)
+			sock5w.SetChecked(false)
 
 			tcpbsw.SetEnabled(false)
 
