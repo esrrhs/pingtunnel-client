@@ -76,7 +76,16 @@ func main() {
 
 	fuckButton := widgets.NewQPushButton2("GO", nil)
 
-	tcpw.ConnectClicked(func(checked bool) {
+	check := func() {
+
+		if sock5w.IsChecked() {
+			tcpw.SetChecked(true)
+			tcpw.SetEnabled(true)
+		} else {
+			tcpw.SetChecked(false)
+			tcpw.SetEnabled(false)
+		}
+
 		if tcpw.IsChecked() {
 
 			tcpbsw.SetEnabled(true)
@@ -103,38 +112,14 @@ func main() {
 			tcpstatw.SetEnabled(false)
 
 		}
+	}
+
+	tcpw.ConnectClicked(func(checked bool) {
+		check()
 	})
 
 	sock5w.ConnectClicked(func(checked bool) {
-		if sock5w.IsChecked() {
-			tcpw.SetChecked(true)
-			tcpw.SetEnabled(true)
-
-			tcpbsw.SetEnabled(true)
-
-			tcpmww.SetEnabled(true)
-
-			tcprstw.SetEnabled(true)
-
-			tcpgzw.SetEnabled(true)
-
-			tcpstatw.SetEnabled(true)
-
-		} else {
-			tcpw.SetChecked(false)
-			tcpw.SetEnabled(false)
-
-			tcpbsw.SetEnabled(false)
-
-			tcpmww.SetEnabled(false)
-
-			tcprstw.SetEnabled(false)
-
-			tcpgzw.SetEnabled(false)
-
-			tcpstatw.SetEnabled(false)
-
-		}
+		check()
 	})
 
 	fuckButton.ConnectClicked(func(checked bool) {
@@ -191,11 +176,9 @@ func main() {
 			a.Show()
 			return
 		}
-		tcpmode_stat, err := strconv.Atoi(tcpstatw.Text())
-		if err != nil {
-			a.SetText("tcp statistic " + err.Error())
-			a.Show()
-			return
+		tcpmode_stat := 0
+		if tcpstatw.IsChecked() {
+			tcpmode_stat = 1
 		}
 		nolog := 0
 		if nologw.IsChecked() {
@@ -238,6 +221,45 @@ func main() {
 			return
 		}
 
+		gConfig := Config{}
+		gConfig.Serverw = serverw.Text()
+
+		gConfig.Portw = portw.Text()
+
+		gConfig.Targetw = targetw.Text()
+
+		gConfig.Timeoutw = timeoutw.Text()
+
+		gConfig.Keyw = keyw.Text()
+
+		if tcpw.IsChecked() {
+			gConfig.Tcpw = "true"
+		}
+
+		gConfig.Tcpbsw = tcpbsw.Text()
+
+		gConfig.Tcpmww = tcpmww.Text()
+
+		gConfig.Tcprstw = tcprstw.Text()
+
+		gConfig.Tcpgzw = tcpgzw.Text()
+
+		if tcpstatw.IsChecked() {
+			gConfig.Tcpstatw = "true"
+		}
+
+		if nologw.IsChecked() {
+			gConfig.Nologw = "true"
+		}
+
+		gConfig.Loglevelw = loglevelw.Text()
+
+		if sock5w.IsChecked() {
+			gConfig.Sock5w = "true"
+		}
+
+		saveJson(gConfig)
+
 		serverw.SetEnabled(false)
 
 		portw.SetEnabled(false)
@@ -266,9 +288,15 @@ func main() {
 
 		sock5w.SetEnabled(false)
 
+		fuckButton.SetEnabled(false)
+
 		loggo.Info("Client Listen %s (%s) Server %s (%s) TargetPort %s:", c.Addr(), c.IPAddr(),
 			c.ServerAddr(), c.ServerIPAddr(), c.TargetAddr())
+
 		go c.Run()
+
+		a.SetText("ok")
+		a.Show()
 	})
 
 	var echoLayout = widgets.NewQGridLayout2()
@@ -310,36 +338,37 @@ func main() {
 
 	lg := loadJson()
 	if lg != nil {
-		gConfig = *lg
+		gConfig := *lg
 
-		serverw.SetText(gConfig.serverw)
+		serverw.SetText(gConfig.Serverw)
 
-		portw.SetText(gConfig.portw)
+		portw.SetText(gConfig.Portw)
 
-		targetw.SetText(gConfig.targetw)
+		targetw.SetText(gConfig.Targetw)
 
-		timeoutw.SetText(gConfig.timeoutw)
+		timeoutw.SetText(gConfig.Timeoutw)
 
-		keyw.SetText(gConfig.keyw)
+		keyw.SetText(gConfig.Keyw)
 
-		tcpw.SetChecked(gConfig.tcpw)
+		tcpw.SetChecked(gConfig.Tcpw == "true")
 
-		tcpbsw.SetText(gConfig.tcpbsw)
+		tcpbsw.SetText(gConfig.Tcpbsw)
 
-		tcpmww.SetText(gConfig.tcpmww)
+		tcpmww.SetText(gConfig.Tcpmww)
 
-		tcprstw.SetText(gConfig.tcprstw)
+		tcprstw.SetText(gConfig.Tcprstw)
 
-		tcpgzw.SetText(gConfig.tcpgzw)
+		tcpgzw.SetText(gConfig.Tcpgzw)
 
-		tcpstatw.SetChecked(gConfig.tcpstatw)
+		tcpstatw.SetChecked(gConfig.Tcpstatw == "true")
 
-		nologw.SetChecked(gConfig.nologw)
+		nologw.SetChecked(gConfig.Nologw == "true")
 
-		loglevelw.SetText(gConfig.loglevelw)
+		loglevelw.SetText(gConfig.Loglevelw)
 
-		sock5w.SetChecked(gConfig.sock5w)
+		sock5w.SetChecked(gConfig.Sock5w == "true")
 
+		check()
 	}
 
 	centralWidget.SetLayout(layout)
@@ -352,36 +381,34 @@ func main() {
 }
 
 type Config struct {
-	serverw string `json:"serverw"`
+	Serverw string `json:"serverw"`
 
-	portw string `json:"portw"`
+	Portw string `json:"portw"`
 
-	targetw string `json:"targetw"`
+	Targetw string `json:"targetw"`
 
-	timeoutw string `json:"timeoutw"`
+	Timeoutw string `json:"timeoutw"`
 
-	keyw string `json:"keyw"`
+	Keyw string `json:"keyw"`
 
-	tcpw bool `json:"tcpw"`
+	Tcpw string `json:"tcpw"`
 
-	tcpbsw string `json:"tcpbsw"`
+	Tcpbsw string `json:"tcpbsw"`
 
-	tcpmww string `json:"tcpmww"`
+	Tcpmww string `json:"tcpmww"`
 
-	tcprstw string `json:"tcprstw"`
+	Tcprstw string `json:"tcprstw"`
 
-	tcpgzw string `json:"tcpgzw"`
+	Tcpgzw string `json:"tcpgzw"`
 
-	tcpstatw bool `json:"tcpstatw"`
+	Tcpstatw string `json:"tcpstatw"`
 
-	nologw bool `json:"nologw"`
+	Nologw string `json:"nologw"`
 
-	loglevelw string `json:"loglevelw"`
+	Loglevelw string `json:"loglevelw"`
 
-	sock5w bool `json:"sock5w"`
+	Sock5w string `json:"sock5w"`
 }
-
-var gConfig Config
 
 func saveJson(c Config) {
 	jsonFile, err := os.OpenFile(".pingtunnel-qt.json",
@@ -393,10 +420,11 @@ func saveJson(c Config) {
 
 	str, err := json.Marshal(&c)
 	if err != nil {
+		loggo.Error("saveJson fail %s", err)
 		return
 	}
 	jsonFile.Write(str)
-
+	jsonFile.Close()
 }
 
 func loadJson() *Config {
@@ -414,5 +442,6 @@ func loadJson() *Config {
 		return nil
 	}
 
+	jsonFile.Close()
 	return &c
 }
