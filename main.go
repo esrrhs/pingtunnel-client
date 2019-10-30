@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/esrrhs/go-engine/src/loggo"
 	"github.com/esrrhs/pingtunnel"
+	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
 	"os"
@@ -11,7 +12,7 @@ import (
 )
 
 func main() {
-	widgets.NewQApplication(len(os.Args), os.Args)
+	app := widgets.NewQApplication(len(os.Args), os.Args)
 
 	var window = widgets.NewQMainWindow(nil, 0)
 	var centralWidget = widgets.NewQWidget(window, 0)
@@ -375,7 +376,28 @@ func main() {
 	window.SetCentralWidget(centralWidget)
 	window.SetMinimumWidth(500)
 	window.SetWindowTitle("pingtunnel-qt")
+
+	//make the window a dialog to hide the minimize button
+	//and don't exit the app if the last window is closed/hidden
+	//but then you will need to provide some other way to close your application
+	window.SetWindowFlags(core.Qt__Dialog)
+	app.SetQuitOnLastWindowClosed(false)
+
 	window.Show()
+
+	//systray
+	sys := widgets.NewQSystemTrayIcon(nil)
+	sys.SetIcon(window.Style().StandardIcon(widgets.QStyle__SP_MessageBoxCritical, nil, nil))
+	sys.ConnectActivated(func(reason widgets.QSystemTrayIcon__ActivationReason) {
+		if reason == widgets.QSystemTrayIcon__Trigger {
+			window.Show()
+		}
+	})
+	menu := widgets.NewQMenu(nil)
+	exit := menu.AddAction("Exit")
+	exit.ConnectTriggered(func(bool) { app.Exit(0) })
+	sys.SetContextMenu(menu)
+	sys.Show()
 
 	widgets.QApplication_Exec()
 }
