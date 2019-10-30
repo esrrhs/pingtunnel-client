@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/esrrhs/go-engine/src/loggo"
 	"github.com/esrrhs/pingtunnel"
 	"github.com/therecipe/qt/core"
@@ -75,7 +76,29 @@ func main() {
 	sock5w := widgets.NewQCheckBox(nil)
 	sock5w.SetChecked(false)
 
+	pingLabel := widgets.NewQLabel2("stop", nil, 0)
 	fuckButton := widgets.NewQPushButton2("GO", nil)
+
+	str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s",
+		0, 0, 0, 0)
+	statLabel := widgets.NewQLabel2(str, nil, 0)
+	exitButton := widgets.NewQPushButton2("EXIT", nil)
+	exitButton.ConnectClicked(func(checked bool) {
+		app.Exit(0)
+	})
+
+	//systray
+	sys := widgets.NewQSystemTrayIcon(nil)
+	sys.SetIcon(window.Style().StandardIcon(widgets.QStyle__SP_MessageBoxCritical, nil, nil))
+	sys.ConnectActivated(func(reason widgets.QSystemTrayIcon__ActivationReason) {
+		if reason == widgets.QSystemTrayIcon__Trigger {
+			window.Show()
+		}
+	})
+	menu := widgets.NewQMenu(nil)
+	exit := menu.AddAction("Exit")
+	exit.ConnectTriggered(func(bool) { app.Exit(0) })
+	sys.SetContextMenu(menu)
 
 	check := func() {
 
@@ -119,7 +142,55 @@ func main() {
 		check()
 	})
 
+	var gclient *pingtunnel.Client
+	var gtimer *core.QTimer
+
 	fuckButton.ConnectClicked(func(checked bool) {
+
+		if gclient != nil {
+			gclient.Stop()
+			gtimer.Stop()
+			gclient = nil
+
+			serverw.SetEnabled(true)
+
+			portw.SetEnabled(true)
+
+			targetw.SetEnabled(true)
+
+			timeoutw.SetEnabled(true)
+
+			keyw.SetEnabled(true)
+
+			tcpw.SetEnabled(true)
+
+			tcpbsw.SetEnabled(true)
+
+			tcpmww.SetEnabled(true)
+
+			tcprstw.SetEnabled(true)
+
+			tcpgzw.SetEnabled(true)
+
+			tcpstatw.SetEnabled(true)
+
+			nologw.SetEnabled(true)
+
+			loglevelw.SetEnabled(true)
+
+			sock5w.SetEnabled(true)
+
+			fuckButton.SetText("GO")
+
+			pingLabel.SetText("stop")
+			str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s",
+				0, 0, 0, 0)
+			statLabel.SetText(str)
+
+			sys.ShowMessage("pingtunnel-qt", "stop ok", widgets.QSystemTrayIcon__Information, 5000)
+
+			return
+		}
 
 		a := widgets.NewQMessageBox(nil)
 
@@ -257,6 +328,17 @@ func main() {
 
 		saveJson(gConfig)
 
+		loggo.Info("Client Listen %s (%s) Server %s (%s) TargetPort %s:", c.Addr(), c.IPAddr(),
+			c.ServerAddr(), c.ServerIPAddr(), c.TargetAddr())
+
+		err = c.Run()
+		if err == nil {
+			sys.ShowMessage("pingtunnel-qt", "start ok", widgets.QSystemTrayIcon__Information, 5000)
+		} else {
+			sys.ShowMessage("pingtunnel-qt", "start fail "+err.Error(), widgets.QSystemTrayIcon__Information, 5000)
+			return
+		}
+
 		serverw.SetEnabled(false)
 
 		portw.SetEnabled(false)
@@ -285,15 +367,24 @@ func main() {
 
 		sock5w.SetEnabled(false)
 
-		fuckButton.SetEnabled(false)
+		fuckButton.SetText("STOP")
 
-		loggo.Info("Client Listen %s (%s) Server %s (%s) TargetPort %s:", c.Addr(), c.IPAddr(),
-			c.ServerAddr(), c.ServerIPAddr(), c.TargetAddr())
+		gclient = c
 
-		go c.Run()
-
-		a.SetText("ok")
-		a.Show()
+		t := core.NewQTimer(nil)
+		t.ConnectEvent(func(e *core.QEvent) bool {
+			if c.RTT() != 0 {
+				pingLabel.SetText(c.RTT().String())
+			} else {
+				pingLabel.SetText("ping fail")
+			}
+			str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s",
+				c.SendPacket(), c.SendPacketSize()/1024, c.RecvPacket(), c.RecvPacketSize()/1024)
+			statLabel.SetText(str)
+			return true
+		})
+		t.Start(1000)
+		gtimer = t
 	})
 
 	var echoLayout = widgets.NewQGridLayout2()
@@ -326,7 +417,11 @@ func main() {
 	echoLayout.AddWidget2(sock5Label, 13, 0, 0)
 	echoLayout.AddWidget2(sock5w, 13, 1, 0)
 
+	echoLayout.AddWidget2(pingLabel, 14, 0, 0)
 	echoLayout.AddWidget2(fuckButton, 14, 1, 0)
+
+	echoLayout.AddWidget3(statLabel, 15, 0, 1, 2, core.Qt__AlignVCenter)
+	echoLayout.AddWidget3(exitButton, 16, 0, 1, 2, core.Qt__AlignVCenter)
 
 	echoGroup.SetLayout(echoLayout)
 
@@ -381,21 +476,10 @@ func main() {
 
 	window.Show()
 
-	//systray
-	sys := widgets.NewQSystemTrayIcon(nil)
-	sys.SetIcon(window.Style().StandardIcon(widgets.QStyle__SP_MessageBoxCritical, nil, nil))
-	sys.ConnectActivated(func(reason widgets.QSystemTrayIcon__ActivationReason) {
-		if reason == widgets.QSystemTrayIcon__Trigger {
-			window.Show()
-		}
-	})
-	menu := widgets.NewQMenu(nil)
-	exit := menu.AddAction("Exit")
-	exit.ConnectTriggered(func(bool) { app.Exit(0) })
-	sys.SetContextMenu(menu)
 	sys.Show()
 
 	widgets.QApplication_Exec()
+
 }
 
 type Config struct {
