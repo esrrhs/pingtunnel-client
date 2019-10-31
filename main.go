@@ -76,6 +76,10 @@ func main() {
 	sock5w := widgets.NewQCheckBox(nil)
 	sock5w.SetChecked(false)
 
+	maxconnLabel := widgets.NewQLabel2("sock5：", nil, 0)
+	maxconnw := widgets.NewQLineEdit(nil)
+	maxconnw.SetText("1000")
+
 	pingLabel := widgets.NewQLabel2("stop", nil, 0)
 	fuckButton := widgets.NewQPushButton2("GO", nil)
 
@@ -180,6 +184,8 @@ func main() {
 
 			sock5w.SetEnabled(true)
 
+			maxconnw.SetEnabled(true)
+
 			fuckButton.SetText("GO")
 
 			pingLabel.SetText("stop")
@@ -271,6 +277,13 @@ func main() {
 			open_sock5 = 1
 		}
 
+		maxconn, err := strconv.Atoi(maxconnw.Text())
+		if err != nil {
+			a.SetText("max connections " + err.Error())
+			a.Show()
+			return
+		}
+
 		if tcpmode == 0 {
 			tcpmode_buffersize = 0
 			tcpmode_maxwin = 0
@@ -281,7 +294,7 @@ func main() {
 
 		c, err := pingtunnel.NewClient(listen, server, target, timeout, key,
 			tcpmode, tcpmode_buffersize, tcpmode_maxwin, tcpmode_resend_timems, tcpmode_compress,
-			tcpmode_stat, open_sock5)
+			tcpmode_stat, open_sock5, maxconn)
 		if err != nil {
 			loggo.Error("ERROR: %s", err.Error())
 			a.SetText("NewClient " + err.Error())
@@ -326,6 +339,8 @@ func main() {
 			gConfig.Sock5w = "true"
 		}
 
+		gConfig.Maxconnw = maxconnw.Text()
+
 		saveJson(gConfig)
 
 		loggo.Info("Client Listen %s (%s) Server %s (%s) TargetPort %s:", c.Addr(), c.IPAddr(),
@@ -366,6 +381,8 @@ func main() {
 		loglevelw.SetEnabled(false)
 
 		sock5w.SetEnabled(false)
+
+		maxconnw.SetEnabled(false)
 
 		fuckButton.SetText("STOP")
 
@@ -416,12 +433,14 @@ func main() {
 	echoLayout.AddWidget2(loglevelw, 12, 1, 0)
 	echoLayout.AddWidget2(sock5Label, 13, 0, 0)
 	echoLayout.AddWidget2(sock5w, 13, 1, 0)
+	echoLayout.AddWidget2(maxconnLabel, 14, 0, 0)
+	echoLayout.AddWidget2(maxconnw, 14, 1, 0)
 
-	echoLayout.AddWidget2(pingLabel, 14, 0, 0)
-	echoLayout.AddWidget2(fuckButton, 14, 1, 0)
+	echoLayout.AddWidget2(pingLabel, 15, 0, 0)
+	echoLayout.AddWidget2(fuckButton, 15, 1, 0)
 
-	echoLayout.AddWidget3(statLabel, 15, 0, 1, 2, core.Qt__AlignVCenter)
-	echoLayout.AddWidget3(exitButton, 16, 0, 1, 2, core.Qt__AlignVCenter)
+	echoLayout.AddWidget3(statLabel, 16, 0, 1, 2, core.Qt__AlignVCenter)
+	echoLayout.AddWidget3(exitButton, 17, 0, 1, 2, core.Qt__AlignVCenter)
 
 	echoGroup.SetLayout(echoLayout)
 
@@ -459,6 +478,8 @@ func main() {
 		loglevelw.SetText(gConfig.Loglevelw)
 
 		sock5w.SetChecked(gConfig.Sock5w == "true")
+
+		maxconnw.SetText(gConfig.Maxconnw)
 
 		check()
 	}
@@ -510,6 +531,8 @@ type Config struct {
 	Loglevelw string `json:"loglevelw"`
 
 	Sock5w string `json:"sock5w"`
+
+	Maxconnw string `json:"maxconnw"`
 }
 
 func saveJson(c Config) {
