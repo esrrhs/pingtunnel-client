@@ -93,7 +93,7 @@ func main() {
 
 	//systray
 	sys := widgets.NewQSystemTrayIcon(nil)
-	sys.SetIcon(window.Style().StandardIcon(widgets.QStyle__SP_MessageBoxCritical, nil, nil))
+	sys.SetIcon(window.Style().StandardIcon(widgets.QStyle__SP_FileDialogToParent, nil, nil))
 	sys.ConnectActivated(func(reason widgets.QSystemTrayIcon__ActivationReason) {
 		if reason == widgets.QSystemTrayIcon__Trigger {
 			window.Show()
