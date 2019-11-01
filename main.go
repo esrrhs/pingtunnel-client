@@ -83,8 +83,8 @@ func main() {
 	pingLabel := widgets.NewQLabel2("stop", nil, 0)
 	fuckButton := widgets.NewQPushButton2("GO", nil)
 
-	str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s",
-		0, 0, 0, 0)
+	str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s %d/%dConnections",
+		0, 0, 0, 0, 0, 0)
 	statLabel := widgets.NewQLabel2(str, nil, 0)
 	exitButton := widgets.NewQPushButton2("EXIT", nil)
 	exitButton.ConnectClicked(func(checked bool) {
@@ -189,8 +189,8 @@ func main() {
 			fuckButton.SetText("GO")
 
 			pingLabel.SetText("stop")
-			str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s",
-				0, 0, 0, 0)
+			str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s %d/%dConnections",
+				0, 0, 0, 0, 0, 0)
 			statLabel.SetText(str)
 
 			sys.ShowMessage("pingtunnel-qt", "stop ok", widgets.QSystemTrayIcon__Information, 5000)
@@ -395,8 +395,9 @@ func main() {
 			} else {
 				pingLabel.SetText("ping fail")
 			}
-			str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s",
-				c.SendPacket(), c.SendPacketSize()/1024, c.RecvPacket(), c.RecvPacketSize()/1024)
+			str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s %d/%dConnections",
+				c.SendPacket(), c.SendPacketSize()/1024, c.RecvPacket(), c.RecvPacketSize()/1024,
+				c.LocalIdToConnMapSize(), c.LocalAddrToConnMapSize())
 			statLabel.SetText(str)
 			return true
 		})
