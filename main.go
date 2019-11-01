@@ -76,7 +76,7 @@ func main() {
 	sock5w := widgets.NewQCheckBox(nil)
 	sock5w.SetChecked(false)
 
-	maxconnLabel := widgets.NewQLabel2("sock5：", nil, 0)
+	maxconnLabel := widgets.NewQLabel2("max conn：", nil, 0)
 	maxconnw := widgets.NewQLineEdit(nil)
 	maxconnw.SetText("1000")
 
