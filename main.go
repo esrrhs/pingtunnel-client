@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/esrrhs/go-engine/src/loggo"
-	"github.com/esrrhs/pingtunnel"
+	"github.com/esrrhs/go-engine/src/pingtunnel"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
