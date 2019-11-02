@@ -46,7 +46,7 @@ func main() {
 
 	tcpbsLabel := widgets.NewQLabel2("tcp buffer size：", nil, 0)
 	tcpbsw := widgets.NewQLineEdit(nil)
-	tcpbsw.SetText("10485760")
+	tcpbsw.SetText("1048576")
 
 	tcpmwLabel := widgets.NewQLabel2("tcp max win：", nil, 0)
 	tcpmww := widgets.NewQLineEdit(nil)
