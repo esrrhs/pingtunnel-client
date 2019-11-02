@@ -108,6 +108,9 @@ func main() {
 
 		if sock5w.IsChecked() {
 			tcpw.SetChecked(true)
+			targetw.SetEnabled(false)
+		} else {
+			targetw.SetEnabled(true)
 		}
 
 		if tcpw.IsChecked() {
