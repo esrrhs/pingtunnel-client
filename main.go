@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/esrrhs/go-engine/src/geoip"
 	"github.com/esrrhs/go-engine/src/loggo"
 	"github.com/esrrhs/go-engine/src/pingtunnel"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
+	"net"
 	"os"
 	"strconv"
 )
@@ -91,6 +93,14 @@ func main() {
 		app.Exit(0)
 	})
 
+	s5filterLabel := widgets.NewQLabel2("except country：", nil, 0)
+	s5filterw := widgets.NewQLineEdit(nil)
+	s5filterw.SetText("CN")
+
+	s5ftfileLabel := widgets.NewQLabel2("ip2country file：", nil, 0)
+	s5ftfilew := widgets.NewQLineEdit(nil)
+	s5ftfilew.SetText("GeoLite2-Country.mmdb")
+
 	//systray
 	sys := widgets.NewQSystemTrayIcon(nil)
 	sys.SetIcon(window.Style().StandardIcon(widgets.QStyle__SP_FileDialogToParent, nil, nil))
@@ -109,8 +119,12 @@ func main() {
 		if sock5w.IsChecked() {
 			tcpw.SetChecked(true)
 			targetw.SetEnabled(false)
+			s5filterw.SetEnabled(true)
+			s5ftfilew.SetEnabled(true)
 		} else {
 			targetw.SetEnabled(true)
+			s5filterw.SetEnabled(false)
+			s5ftfilew.SetEnabled(false)
 		}
 
 		if tcpw.IsChecked() {
@@ -189,8 +203,13 @@ func main() {
 
 			maxconnw.SetEnabled(true)
 
+			s5filterw.SetEnabled(true)
+
+			s5ftfilew.SetEnabled(true)
+
 			fuckButton.SetText("GO")
 
+			check()
 			pingLabel.SetText("stop")
 			str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s %d/%dConnections",
 				0, 0, 0, 0, 0, 0)
@@ -229,33 +248,40 @@ func main() {
 		if tcpw.IsChecked() {
 			tcpmode = 1
 		}
-		tcpmode_buffersize, err := strconv.Atoi(tcpbsw.Text())
-		if err != nil {
-			a.SetText("tcp buffer size " + err.Error())
-			a.Show()
-			return
-		}
-		tcpmode_maxwin, err := strconv.Atoi(tcpmww.Text())
-		if err != nil {
-			a.SetText("tcp max win " + err.Error())
-			a.Show()
-			return
-		}
-		tcpmode_resend_timems, err := strconv.Atoi(tcprstw.Text())
-		if err != nil {
-			a.SetText("tcp resend time " + err.Error())
-			a.Show()
-			return
-		}
-		tcpmode_compress, err := strconv.Atoi(tcpgzw.Text())
-		if err != nil {
-			a.SetText("tcp compress " + err.Error())
-			a.Show()
-			return
-		}
+		tcpmode_buffersize := 0
+		tcpmode_maxwin := 0
+		tcpmode_resend_timems := 0
+		tcpmode_compress := 0
 		tcpmode_stat := 0
-		if tcpstatw.IsChecked() {
-			tcpmode_stat = 1
+		if tcpmode != 0 {
+			tcpmode_buffersize, err = strconv.Atoi(tcpbsw.Text())
+			if err != nil {
+				a.SetText("tcp buffer size " + err.Error())
+				a.Show()
+				return
+			}
+			tcpmode_maxwin, err = strconv.Atoi(tcpmww.Text())
+			if err != nil {
+				a.SetText("tcp max win " + err.Error())
+				a.Show()
+				return
+			}
+			tcpmode_resend_timems, err = strconv.Atoi(tcprstw.Text())
+			if err != nil {
+				a.SetText("tcp resend time " + err.Error())
+				a.Show()
+				return
+			}
+			tcpmode_compress, err = strconv.Atoi(tcpgzw.Text())
+			if err != nil {
+				a.SetText("tcp compress " + err.Error())
+				a.Show()
+				return
+			}
+			tcpmode_stat = 0
+			if tcpstatw.IsChecked() {
+				tcpmode_stat = 1
+			}
 		}
 		nolog := 0
 		if nologw.IsChecked() {
@@ -295,9 +321,42 @@ func main() {
 			tcpmode_stat = 0
 		}
 
+		var filter func(addr string) bool
+		if open_sock5 != 0 {
+			s5filter := s5filterw.Text()
+			s5ftfile := s5ftfilew.Text()
+			if len(s5filter) > 0 {
+				err := geoip.Load(s5ftfile)
+				if err != nil {
+					a.SetText("sock5 filter file " + err.Error())
+					a.Show()
+					return
+				}
+			}
+			filter = func(addr string) bool {
+				if len(s5filter) <= 0 {
+					return true
+				}
+
+				taddr, err := net.ResolveTCPAddr("tcp", addr)
+				if err != nil {
+					return false
+				}
+
+				ret, err := geoip.GetCountryIsoCode(taddr.IP.String())
+				if err != nil {
+					return false
+				}
+				if len(ret) <= 0 {
+					return false
+				}
+				return ret != s5filter
+			}
+		}
+
 		c, err := pingtunnel.NewClient(listen, server, target, timeout, key,
 			tcpmode, tcpmode_buffersize, tcpmode_maxwin, tcpmode_resend_timems, tcpmode_compress,
-			tcpmode_stat, open_sock5, maxconn)
+			tcpmode_stat, open_sock5, maxconn, &filter)
 		if err != nil {
 			loggo.Error("ERROR: %s", err.Error())
 			a.SetText("NewClient " + err.Error())
@@ -344,6 +403,10 @@ func main() {
 
 		gConfig.Maxconnw = maxconnw.Text()
 
+		gConfig.S5filterw = s5filterw.Text()
+
+		gConfig.S5ftfilew = s5ftfilew.Text()
+
 		saveJson(gConfig)
 
 		loggo.Info("Client Listen %s (%s) Server %s (%s) TargetPort %s:", c.Addr(), c.IPAddr(),
@@ -386,6 +449,10 @@ func main() {
 		sock5w.SetEnabled(false)
 
 		maxconnw.SetEnabled(false)
+
+		s5filterw.SetEnabled(false)
+
+		s5ftfilew.SetEnabled(false)
 
 		fuckButton.SetText("STOP")
 
@@ -440,11 +507,16 @@ func main() {
 	echoLayout.AddWidget2(maxconnLabel, 14, 0, 0)
 	echoLayout.AddWidget2(maxconnw, 14, 1, 0)
 
-	echoLayout.AddWidget2(pingLabel, 15, 0, 0)
-	echoLayout.AddWidget2(fuckButton, 15, 1, 0)
+	echoLayout.AddWidget2(s5filterLabel, 15, 0, 0)
+	echoLayout.AddWidget2(s5filterw, 15, 1, 0)
+	echoLayout.AddWidget2(s5ftfileLabel, 16, 0, 0)
+	echoLayout.AddWidget2(s5ftfilew, 16, 1, 0)
 
-	echoLayout.AddWidget3(statLabel, 16, 0, 1, 2, core.Qt__AlignVCenter)
-	echoLayout.AddWidget3(exitButton, 17, 0, 1, 2, core.Qt__AlignVCenter)
+	echoLayout.AddWidget2(pingLabel, 17, 0, 0)
+	echoLayout.AddWidget2(fuckButton, 17, 1, 0)
+
+	echoLayout.AddWidget3(statLabel, 18, 0, 1, 2, core.Qt__AlignVCenter)
+	echoLayout.AddWidget3(exitButton, 19, 0, 1, 2, core.Qt__AlignVCenter)
 
 	echoGroup.SetLayout(echoLayout)
 
@@ -484,6 +556,10 @@ func main() {
 		sock5w.SetChecked(gConfig.Sock5w == "true")
 
 		maxconnw.SetText(gConfig.Maxconnw)
+
+		s5filterw.SetText(gConfig.S5filterw)
+
+		s5ftfilew.SetText(gConfig.S5ftfilew)
 
 		check()
 	}
@@ -537,6 +613,10 @@ type Config struct {
 	Sock5w string `json:"sock5w"`
 
 	Maxconnw string `json:"maxconnw"`
+
+	S5filterw string `json:"s5filterw"`
+
+	S5ftfilew string `json:"s5ftfilew"`
 }
 
 func saveJson(c Config) {
