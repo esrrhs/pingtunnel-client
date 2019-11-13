@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/esrrhs/go-engine/src/common"
 	"github.com/esrrhs/go-engine/src/geoip"
 	"github.com/esrrhs/go-engine/src/loggo"
 	"github.com/esrrhs/go-engine/src/pingtunnel"
@@ -15,6 +16,9 @@ import (
 )
 
 func main() {
+
+	defer common.CrashLog()
+
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 
 	var window = widgets.NewQMainWindow(nil, 0)
