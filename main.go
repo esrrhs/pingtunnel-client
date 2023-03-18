@@ -3,10 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/esrrhs/go-engine/src/common"
-	"github.com/esrrhs/go-engine/src/geoip"
-	"github.com/esrrhs/go-engine/src/loggo"
-	"github.com/esrrhs/go-engine/src/pingtunnel"
+	"github.com/esrrhs/gohome/common"
+	"github.com/esrrhs/gohome/loggo"
+	"github.com/esrrhs/pingtunnel"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
@@ -330,7 +329,7 @@ func main() {
 			s5filter := s5filterw.Text()
 			s5ftfile := s5ftfilew.Text()
 			if len(s5filter) > 0 {
-				err := geoip.Load(s5ftfile)
+				err := pingtunnel.LoadGeoDB(s5ftfile)
 				if err != nil {
 					a.SetText("sock5 filter file " + err.Error())
 					a.Show()
@@ -347,7 +346,7 @@ func main() {
 					return false
 				}
 
-				ret, err := geoip.GetCountryIsoCode(taddr.IP.String())
+				ret, err := pingtunnel.GetCountryIsoCode(taddr.IP.String())
 				if err != nil {
 					return false
 				}
