@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/esrrhs/gohome/common"
 	"github.com/esrrhs/gohome/loggo"
+	"github.com/esrrhs/gohome/thirdparty"
 	"github.com/esrrhs/pingtunnel"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
@@ -329,7 +330,7 @@ func main() {
 			s5filter := s5filterw.Text()
 			s5ftfile := s5ftfilew.Text()
 			if len(s5filter) > 0 {
-				err := pingtunnel.LoadGeoDB(s5ftfile)
+				err := thirdparty.LoadGeoip2(s5ftfile)
 				if err != nil {
 					a.SetText("sock5 filter file " + err.Error())
 					a.Show()
@@ -346,7 +347,7 @@ func main() {
 					return false
 				}
 
-				ret, err := pingtunnel.GetCountryIsoCode(taddr.IP.String())
+				ret, err := thirdparty.GetGeoipCountryIsoCode(taddr.IP.String())
 				if err != nil {
 					return false
 				}

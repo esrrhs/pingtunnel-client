@@ -1,21 +1,39 @@
 module github.com/esrrhs/pingtunnel-qt
 
-go 1.19
+go 1.24.1
 
 require (
-	github.com/esrrhs/gohome v0.0.0-20230222132228-8bb1d3e2ecc4
-	github.com/esrrhs/pingtunnel v0.0.0-20230318053527-aa216a7d725c
+	github.com/esrrhs/gohome v0.0.0-20250426022937-504d912bccf7
+	github.com/esrrhs/pingtunnel v0.0.0-20250426101315-2a5fa734b2f9
 	github.com/therecipe/qt v0.0.0-20200904063919-c0c124a5770d
 )
 
 require (
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/uuid v1.3.0 // indirect
-	github.com/gopherjs/gopherjs v0.0.0-20190411002643-bd77b112433e // indirect
-	github.com/oschwald/geoip2-golang v1.8.0 // indirect
-	github.com/oschwald/maxminddb-golang v1.10.0 // indirect
-	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/google/pprof v0.0.0-20250423184734-337e5dd93bb4 // indirect
+	github.com/google/uuid v1.6.0 // indirect
+	github.com/gopherjs/gopherjs v1.17.2 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
+	github.com/klauspost/reedsolomon v1.12.4 // indirect
+	github.com/onsi/ginkgo/v2 v2.23.4 // indirect
+	github.com/oschwald/geoip2-golang v1.11.0 // indirect
+	github.com/oschwald/maxminddb-golang v1.13.1 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/quic-go/quic-go v0.51.0 // indirect
+	github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 // indirect
+	github.com/templexxx/xor v0.0.0-20191217153810-f85b25db303b // indirect
+	github.com/tjfoc/gmsm v1.4.1 // indirect
+	github.com/xtaci/kcp-go v5.4.20+incompatible // indirect
+	github.com/xtaci/smux v1.5.34 // indirect
+	go.uber.org/automaxprocs v1.6.0 // indirect
+	go.uber.org/mock v0.5.1 // indirect
+	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/mod v0.24.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/tools v0.32.0 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 )
