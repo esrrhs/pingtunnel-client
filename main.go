@@ -3,16 +3,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"os"
+	"strconv"
+
 	"github.com/esrrhs/gohome/common"
 	"github.com/esrrhs/gohome/loggo"
 	"github.com/esrrhs/gohome/thirdparty"
 	"github.com/esrrhs/pingtunnel"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
-	"io/ioutil"
-	"net"
-	"os"
-	"strconv"
 )
 
 func main() {
@@ -358,9 +359,9 @@ func main() {
 			}
 		}
 
-		c, err := pingtunnel.NewClient(listen, server, target, timeout, key,
+		c, err := pingtunnel.NewClient(listen, server, target, timeout, key, "0.0.0.0",
 			tcpmode, tcpmode_buffersize, tcpmode_maxwin, tcpmode_resend_timems, tcpmode_compress,
-			tcpmode_stat, open_sock5, maxconn, &filter)
+			tcpmode_stat, open_sock5, maxconn, &filter, nil)
 		if err != nil {
 			loggo.Error("ERROR: %s", err.Error())
 			a.SetText("NewClient " + err.Error())
