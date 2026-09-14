@@ -1,0 +1,6 @@
+.idea/
+*.exe
+*.syso
+/pingtunnel-qt
+.pingtunnel-qt.json
+*.log

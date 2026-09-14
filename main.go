@@ -3,301 +3,230 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
+	"time"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/driver/desktop"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 
 	"github.com/esrrhs/gohome/common"
 	"github.com/esrrhs/gohome/loggo"
 	"github.com/esrrhs/gohome/thirdparty"
 	"github.com/esrrhs/pingtunnel"
-	"github.com/therecipe/qt/core"
-	"github.com/therecipe/qt/widgets"
 )
 
 func main() {
-
 	defer common.CrashLog()
 
-	app := widgets.NewQApplication(len(os.Args), os.Args)
+	a := app.NewWithID("com.esrrhs.pingtunnel-qt")
+	w := a.NewWindow("pingtunnel-qt v" + Version)
 
-	var window = widgets.NewQMainWindow(nil, 0)
-	var centralWidget = widgets.NewQWidget(window, 0)
-
-	echoGroup := widgets.NewQGroupBox2("", nil)
-
-	serverLabel := widgets.NewQLabel2("server：", nil, 0)
-	serverw := widgets.NewQLineEdit(nil)
+	serverw := widget.NewEntry()
 	serverw.SetText("www.yourserver.com")
-
-	portLabel := widgets.NewQLabel2("listen port：", nil, 0)
-	portw := widgets.NewQLineEdit(nil)
+	portw := widget.NewEntry()
 	portw.SetText("4455")
-
-	targetLabel := widgets.NewQLabel2("target addr：", nil, 0)
-	targetw := widgets.NewQLineEdit(nil)
+	targetw := widget.NewEntry()
 	targetw.SetText("www.yourserver.com:4455")
-
-	timeoutLabel := widgets.NewQLabel2("timeout：", nil, 0)
-	timeoutw := widgets.NewQLineEdit(nil)
+	timeoutw := widget.NewEntry()
 	timeoutw.SetText("60")
-
-	keyLabel := widgets.NewQLabel2("key：", nil, 0)
-	keyw := widgets.NewQLineEdit(nil)
+	keyw := widget.NewEntry()
 	keyw.SetText("0")
-
-	tcpLabel := widgets.NewQLabel2("tcp mode：", nil, 0)
-	tcpw := widgets.NewQCheckBox(nil)
-	tcpw.SetChecked(true)
-
-	tcpbsLabel := widgets.NewQLabel2("tcp buffer size：", nil, 0)
-	tcpbsw := widgets.NewQLineEdit(nil)
+	tcpbsw := widget.NewEntry()
 	tcpbsw.SetText("1048576")
-
-	tcpmwLabel := widgets.NewQLabel2("tcp max win：", nil, 0)
-	tcpmww := widgets.NewQLineEdit(nil)
+	tcpmww := widget.NewEntry()
 	tcpmww.SetText("10000")
-
-	tcprstLabel := widgets.NewQLabel2("tcp resend time：", nil, 0)
-	tcprstw := widgets.NewQLineEdit(nil)
+	tcprstw := widget.NewEntry()
 	tcprstw.SetText("400")
-
-	tcpgzLabel := widgets.NewQLabel2("tcp compress：", nil, 0)
-	tcpgzw := widgets.NewQLineEdit(nil)
+	tcpgzw := widget.NewEntry()
 	tcpgzw.SetText("0")
-
-	tcpstatLabel := widgets.NewQLabel2("tcp statistic：", nil, 0)
-	tcpstatw := widgets.NewQCheckBox(nil)
-	tcpstatw.SetChecked(false)
-
-	nologLabel := widgets.NewQLabel2("no log：", nil, 0)
-	nologw := widgets.NewQCheckBox(nil)
-	nologw.SetChecked(false)
-
-	loglevelLabel := widgets.NewQLabel2("log level：", nil, 0)
-	loglevelw := widgets.NewQLineEdit(nil)
+	loglevelw := widget.NewEntry()
 	loglevelw.SetText("info")
-
-	sock5Label := widgets.NewQLabel2("sock5：", nil, 0)
-	sock5w := widgets.NewQCheckBox(nil)
-	sock5w.SetChecked(false)
-
-	maxconnLabel := widgets.NewQLabel2("max conn：", nil, 0)
-	maxconnw := widgets.NewQLineEdit(nil)
+	maxconnw := widget.NewEntry()
 	maxconnw.SetText("1000")
-
-	pingLabel := widgets.NewQLabel2("stop", nil, 0)
-	fuckButton := widgets.NewQPushButton2("GO", nil)
-
-	str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s %d/%dConnections",
-		0, 0, 0, 0, 0, 0)
-	statLabel := widgets.NewQLabel2(str, nil, 0)
-	exitButton := widgets.NewQPushButton2("EXIT", nil)
-	exitButton.ConnectClicked(func(checked bool) {
-		app.Exit(0)
-	})
-
-	s5filterLabel := widgets.NewQLabel2("except country：", nil, 0)
-	s5filterw := widgets.NewQLineEdit(nil)
+	s5filterw := widget.NewEntry()
 	s5filterw.SetText("CN")
-
-	s5ftfileLabel := widgets.NewQLabel2("ip2country file：", nil, 0)
-	s5ftfilew := widgets.NewQLineEdit(nil)
+	s5ftfilew := widget.NewEntry()
 	s5ftfilew.SetText("GeoLite2-Country.mmdb")
 
-	//systray
-	sys := widgets.NewQSystemTrayIcon(nil)
-	sys.SetIcon(window.Style().StandardIcon(widgets.QStyle__SP_FileDialogToParent, nil, nil))
-	sys.ConnectActivated(func(reason widgets.QSystemTrayIcon__ActivationReason) {
-		if reason == widgets.QSystemTrayIcon__Trigger {
-			window.Show()
+	var check func()
+	tcpw := widget.NewCheck("", func(bool) {
+		if check != nil {
+			check()
 		}
 	})
-	menu := widgets.NewQMenu(nil)
-	exit := menu.AddAction("Exit")
-	exit.ConnectTriggered(func(bool) { app.Exit(0) })
-	sys.SetContextMenu(menu)
-
-	check := func() {
-
-		if sock5w.IsChecked() {
-			tcpw.SetChecked(true)
-			targetw.SetEnabled(false)
-			s5filterw.SetEnabled(true)
-			s5ftfilew.SetEnabled(true)
-		} else {
-			targetw.SetEnabled(true)
-			s5filterw.SetEnabled(false)
-			s5ftfilew.SetEnabled(false)
+	tcpstatw := widget.NewCheck("", nil)
+	nologw := widget.NewCheck("", nil)
+	sock5w := widget.NewCheck("", func(bool) {
+		if check != nil {
+			check()
 		}
+	})
 
-		if tcpw.IsChecked() {
+	pingLabel := widget.NewLabel("stop")
+	statLabel := widget.NewLabel(statText(0, 0, 0, 0, 0, 0))
+	statLabel.Wrapping = fyne.TextWrapWord
 
-			tcpbsw.SetEnabled(true)
+	entries := []*widget.Entry{
+		serverw, portw, targetw, timeoutw, keyw,
+		tcpbsw, tcpmww, tcprstw, tcpgzw, loglevelw,
+		maxconnw, s5filterw, s5ftfilew,
+	}
+	checks := []*widget.Check{tcpw, tcpstatw, nologw, sock5w}
 
-			tcpmww.SetEnabled(true)
-
-			tcprstw.SetEnabled(true)
-
-			tcpgzw.SetEnabled(true)
-
-			tcpstatw.SetEnabled(true)
-
+	checking := false
+	check = func() {
+		if checking {
+			return
+		}
+		checking = true
+		defer func() { checking = false }()
+		if sock5w.Checked {
+			tcpw.SetChecked(true)
+			targetw.Disable()
+			s5filterw.Enable()
+			s5ftfilew.Enable()
+		} else {
+			targetw.Enable()
+			s5filterw.Disable()
+			s5ftfilew.Disable()
+		}
+		if tcpw.Checked {
+			tcpbsw.Enable()
+			tcpmww.Enable()
+			tcprstw.Enable()
+			tcpgzw.Enable()
+			tcpstatw.Enable()
 		} else {
 			sock5w.SetChecked(false)
+			tcpbsw.Disable()
+			tcpmww.Disable()
+			tcprstw.Disable()
+			tcpgzw.Disable()
+			tcpstatw.Disable()
+		}
+	}
+	tcpw.SetChecked(true)
 
-			tcpbsw.SetEnabled(false)
-
-			tcpmww.SetEnabled(false)
-
-			tcprstw.SetEnabled(false)
-
-			tcpgzw.SetEnabled(false)
-
-			tcpstatw.SetEnabled(false)
-
+	setIdle := func() {
+		for _, e := range entries {
+			e.Enable()
+		}
+		for _, c := range checks {
+			c.Enable()
+		}
+		check()
+	}
+	setBusy := func() {
+		for _, e := range entries {
+			e.Disable()
+		}
+		for _, c := range checks {
+			c.Disable()
 		}
 	}
 
-	tcpw.ConnectClicked(func(checked bool) {
-		check()
-	})
-
-	sock5w.ConnectClicked(func(checked bool) {
-		check()
-	})
-
 	var gclient *pingtunnel.Client
-	var gtimer *core.QTimer
+	var stopStat chan struct{}
+	var goButton *widget.Button
 
-	fuckButton.ConnectClicked(func(checked bool) {
+	notify := func(msg string) {
+		a.SendNotification(fyne.NewNotification("pingtunnel-qt", msg))
+	}
 
+	stopClient := func() {
+		if stopStat != nil {
+			close(stopStat)
+			stopStat = nil
+		}
 		if gclient != nil {
 			gclient.Stop()
-			gtimer.Stop()
 			gclient = nil
+		}
+		setIdle()
+		goButton.SetText("GO")
+		pingLabel.SetText("stop")
+		statLabel.SetText(statText(0, 0, 0, 0, 0, 0))
+	}
 
-			serverw.SetEnabled(true)
-
-			portw.SetEnabled(true)
-
-			targetw.SetEnabled(true)
-
-			timeoutw.SetEnabled(true)
-
-			keyw.SetEnabled(true)
-
-			tcpw.SetEnabled(true)
-
-			tcpbsw.SetEnabled(true)
-
-			tcpmww.SetEnabled(true)
-
-			tcprstw.SetEnabled(true)
-
-			tcpgzw.SetEnabled(true)
-
-			tcpstatw.SetEnabled(true)
-
-			nologw.SetEnabled(true)
-
-			loglevelw.SetEnabled(true)
-
-			sock5w.SetEnabled(true)
-
-			maxconnw.SetEnabled(true)
-
-			s5filterw.SetEnabled(true)
-
-			s5ftfilew.SetEnabled(true)
-
-			fuckButton.SetText("GO")
-
-			check()
-			pingLabel.SetText("stop")
-			str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s %d/%dConnections",
-				0, 0, 0, 0, 0, 0)
-			statLabel.SetText(str)
-
-			sys.ShowMessage("pingtunnel-qt", "stop ok", widgets.QSystemTrayIcon__Information, 5000)
-
+	goButton = widget.NewButton("GO", func() {
+		if gclient != nil {
+			stopClient()
+			notify("stop ok")
 			return
 		}
 
-		a := widgets.NewQMessageBox(nil)
-
-		port, err := strconv.Atoi(portw.Text())
+		port, err := strconv.Atoi(portw.Text)
 		if err != nil {
-			a.SetText("listen port " + err.Error())
-			a.Show()
+			dialog.ShowInformation("提示", "listen port "+err.Error(), w)
 			return
 		}
-		listen := ":" + strconv.Itoa(port)
+		timeout, err := strconv.Atoi(timeoutw.Text)
+		if err != nil {
+			dialog.ShowInformation("提示", "timeout "+err.Error(), w)
+			return
+		}
+		key, err := strconv.Atoi(keyw.Text)
+		if err != nil {
+			dialog.ShowInformation("提示", "key "+err.Error(), w)
+			return
+		}
+		maxconn, err := strconv.Atoi(maxconnw.Text)
+		if err != nil {
+			dialog.ShowInformation("提示", "max connections "+err.Error(), w)
+			return
+		}
 
-		target := targetw.Text()
-		server := serverw.Text()
-		timeout, err := strconv.Atoi(timeoutw.Text())
-		if err != nil {
-			a.SetText("timeout " + err.Error())
-			a.Show()
-			return
-		}
-		key, err := strconv.Atoi(keyw.Text())
-		if err != nil {
-			a.SetText("key " + err.Error())
-			a.Show()
-			return
-		}
 		tcpmode := 0
-		if tcpw.IsChecked() {
+		if tcpw.Checked {
 			tcpmode = 1
 		}
-		tcpmode_buffersize := 0
-		tcpmode_maxwin := 0
-		tcpmode_resend_timems := 0
-		tcpmode_compress := 0
-		tcpmode_stat := 0
+		tcpmodeBuffersize := 0
+		tcpmodeMaxwin := 0
+		tcpmodeResend := 0
+		tcpmodeCompress := 0
+		tcpmodeStat := 0
 		if tcpmode != 0 {
-			tcpmode_buffersize, err = strconv.Atoi(tcpbsw.Text())
+			tcpmodeBuffersize, err = strconv.Atoi(tcpbsw.Text)
 			if err != nil {
-				a.SetText("tcp buffer size " + err.Error())
-				a.Show()
+				dialog.ShowInformation("提示", "tcp buffer size "+err.Error(), w)
 				return
 			}
-			tcpmode_maxwin, err = strconv.Atoi(tcpmww.Text())
+			tcpmodeMaxwin, err = strconv.Atoi(tcpmww.Text)
 			if err != nil {
-				a.SetText("tcp max win " + err.Error())
-				a.Show()
+				dialog.ShowInformation("提示", "tcp max win "+err.Error(), w)
 				return
 			}
-			tcpmode_resend_timems, err = strconv.Atoi(tcprstw.Text())
+			tcpmodeResend, err = strconv.Atoi(tcprstw.Text)
 			if err != nil {
-				a.SetText("tcp resend time " + err.Error())
-				a.Show()
+				dialog.ShowInformation("提示", "tcp resend time "+err.Error(), w)
 				return
 			}
-			tcpmode_compress, err = strconv.Atoi(tcpgzw.Text())
+			tcpmodeCompress, err = strconv.Atoi(tcpgzw.Text)
 			if err != nil {
-				a.SetText("tcp compress " + err.Error())
-				a.Show()
+				dialog.ShowInformation("提示", "tcp compress "+err.Error(), w)
 				return
 			}
-			tcpmode_stat = 0
-			if tcpstatw.IsChecked() {
-				tcpmode_stat = 1
+			if tcpstatw.Checked {
+				tcpmodeStat = 1
 			}
 		}
+
 		nolog := 0
-		if nologw.IsChecked() {
+		if nologw.Checked {
 			nolog = 1
 		}
-
-		loglevel := loglevelw.Text()
-
 		level := loggo.LEVEL_INFO
-		if loggo.NameToLevel(loglevel) >= 0 {
-			level = loggo.NameToLevel(loglevel)
+		if lv := loggo.NameToLevel(loglevelw.Text); lv >= 0 {
+			level = lv
 		}
 		loggo.Ini(loggo.Config{
 			Level:     level,
@@ -306,35 +235,18 @@ func main() {
 			NoLogFile: nolog > 0,
 		})
 
-		open_sock5 := 0
-		if sock5w.IsChecked() {
-			open_sock5 = 1
-		}
-
-		maxconn, err := strconv.Atoi(maxconnw.Text())
-		if err != nil {
-			a.SetText("max connections " + err.Error())
-			a.Show()
-			return
-		}
-
-		if tcpmode == 0 {
-			tcpmode_buffersize = 0
-			tcpmode_maxwin = 0
-			tcpmode_resend_timems = 0
-			tcpmode_compress = 0
-			tcpmode_stat = 0
+		openSock5 := 0
+		if sock5w.Checked {
+			openSock5 = 1
 		}
 
 		var filter func(addr string) bool
-		if open_sock5 != 0 {
-			s5filter := s5filterw.Text()
-			s5ftfile := s5ftfilew.Text()
+		if openSock5 != 0 {
+			s5filter := s5filterw.Text
+			s5ftfile := s5ftfilew.Text
 			if len(s5filter) > 0 {
-				err := thirdparty.LoadGeoip2(s5ftfile)
-				if err != nil {
-					a.SetText("sock5 filter file " + err.Error())
-					a.Show()
+				if err := thirdparty.LoadGeoip2(s5ftfile); err != nil {
+					dialog.ShowInformation("提示", "sock5 filter file "+err.Error(), w)
 					return
 				}
 			}
@@ -342,320 +254,330 @@ func main() {
 				if len(s5filter) <= 0 {
 					return true
 				}
-
 				taddr, err := net.ResolveTCPAddr("tcp", addr)
 				if err != nil {
 					return false
 				}
-
 				ret, err := thirdparty.GetGeoipCountryIsoCode(taddr.IP.String())
-				if err != nil {
-					return false
-				}
-				if len(ret) <= 0 {
+				if err != nil || len(ret) <= 0 {
 					return false
 				}
 				return ret != s5filter
 			}
 		}
 
-		c, err := pingtunnel.NewClient(listen, server, target, timeout, key, "0.0.0.0",
-			tcpmode, tcpmode_buffersize, tcpmode_maxwin, tcpmode_resend_timems, tcpmode_compress,
-			tcpmode_stat, open_sock5, maxconn, &filter, nil)
+		listen := ":" + strconv.Itoa(port)
+		c, err := pingtunnel.NewClient(listen, serverw.Text, targetw.Text, timeout, key, "0.0.0.0",
+			tcpmode, tcpmodeBuffersize, tcpmodeMaxwin, tcpmodeResend, tcpmodeCompress,
+			tcpmodeStat, openSock5, maxconn, &filter, nil)
 		if err != nil {
 			loggo.Error("ERROR: %s", err.Error())
-			a.SetText("NewClient " + err.Error())
-			a.Show()
+			dialog.ShowInformation("提示", "NewClient "+err.Error(), w)
 			return
 		}
 
-		gConfig := Config{}
-		gConfig.Serverw = serverw.Text()
-
-		gConfig.Portw = portw.Text()
-
-		gConfig.Targetw = targetw.Text()
-
-		gConfig.Timeoutw = timeoutw.Text()
-
-		gConfig.Keyw = keyw.Text()
-
-		if tcpw.IsChecked() {
-			gConfig.Tcpw = "true"
+		cfg := Config{
+			Serverw:   serverw.Text,
+			Portw:     portw.Text,
+			Targetw:   targetw.Text,
+			Timeoutw:  timeoutw.Text,
+			Keyw:      keyw.Text,
+			Tcpbsw:    tcpbsw.Text,
+			Tcpmww:    tcpmww.Text,
+			Tcprstw:   tcprstw.Text,
+			Tcpgzw:    tcpgzw.Text,
+			Loglevelw: loglevelw.Text,
+			Maxconnw:  maxconnw.Text,
+			S5filterw: s5filterw.Text,
+			S5ftfilew: s5ftfilew.Text,
 		}
-
-		gConfig.Tcpbsw = tcpbsw.Text()
-
-		gConfig.Tcpmww = tcpmww.Text()
-
-		gConfig.Tcprstw = tcprstw.Text()
-
-		gConfig.Tcpgzw = tcpgzw.Text()
-
-		if tcpstatw.IsChecked() {
-			gConfig.Tcpstatw = "true"
+		if tcpw.Checked {
+			cfg.Tcpw = "true"
 		}
-
-		if nologw.IsChecked() {
-			gConfig.Nologw = "true"
+		if tcpstatw.Checked {
+			cfg.Tcpstatw = "true"
 		}
-
-		gConfig.Loglevelw = loglevelw.Text()
-
-		if sock5w.IsChecked() {
-			gConfig.Sock5w = "true"
+		if nologw.Checked {
+			cfg.Nologw = "true"
 		}
-
-		gConfig.Maxconnw = maxconnw.Text()
-
-		gConfig.S5filterw = s5filterw.Text()
-
-		gConfig.S5ftfilew = s5ftfilew.Text()
-
-		saveJson(gConfig)
+		if sock5w.Checked {
+			cfg.Sock5w = "true"
+		}
+		saveJson(cfg)
 
 		loggo.Info("Client Listen %s (%s) Server %s (%s) TargetPort %s:", c.Addr(), c.IPAddr(),
 			c.ServerAddr(), c.ServerIPAddr(), c.TargetAddr())
 
-		err = c.Run()
-		if err == nil {
-			sys.ShowMessage("pingtunnel-qt", "start ok", widgets.QSystemTrayIcon__Information, 5000)
-		} else {
-			sys.ShowMessage("pingtunnel-qt", "start fail "+err.Error(), widgets.QSystemTrayIcon__Information, 5000)
+		if err := c.Run(); err != nil {
+			notify("start fail " + err.Error())
 			return
 		}
+		notify("start ok")
 
-		serverw.SetEnabled(false)
-
-		portw.SetEnabled(false)
-
-		targetw.SetEnabled(false)
-
-		timeoutw.SetEnabled(false)
-
-		keyw.SetEnabled(false)
-
-		tcpw.SetEnabled(false)
-
-		tcpbsw.SetEnabled(false)
-
-		tcpmww.SetEnabled(false)
-
-		tcprstw.SetEnabled(false)
-
-		tcpgzw.SetEnabled(false)
-
-		tcpstatw.SetEnabled(false)
-
-		nologw.SetEnabled(false)
-
-		loglevelw.SetEnabled(false)
-
-		sock5w.SetEnabled(false)
-
-		maxconnw.SetEnabled(false)
-
-		s5filterw.SetEnabled(false)
-
-		s5ftfilew.SetEnabled(false)
-
-		fuckButton.SetText("STOP")
-
+		setBusy()
+		goButton.SetText("STOP")
 		gclient = c
-
-		t := core.NewQTimer(nil)
-		t.ConnectEvent(func(e *core.QEvent) bool {
-			if c.RTT() != 0 {
-				pingLabel.SetText(c.RTT().String())
-			} else {
-				pingLabel.SetText("ping fail")
+		stopStat = make(chan struct{})
+		go func(c *pingtunnel.Client, stop <-chan struct{}) {
+			t := time.NewTicker(time.Second)
+			defer t.Stop()
+			for {
+				select {
+				case <-stop:
+					return
+				case <-t.C:
+					fyne.Do(func() {
+						if c.RTT() != 0 {
+							pingLabel.SetText(c.RTT().String())
+						} else {
+							pingLabel.SetText("ping fail")
+						}
+						statLabel.SetText(statText(
+							c.SendPacket(), c.SendPacketSize()/1024,
+							c.RecvPacket(), c.RecvPacketSize()/1024,
+							c.LocalIdToConnMapSize(), c.LocalAddrToConnMapSize()))
+					})
+				}
 			}
-			str := fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s %d/%dConnections",
-				c.SendPacket(), c.SendPacketSize()/1024, c.RecvPacket(), c.RecvPacketSize()/1024,
-				c.LocalIdToConnMapSize(), c.LocalAddrToConnMapSize())
-			statLabel.SetText(str)
-			return true
-		})
-		t.Start(1000)
-		gtimer = t
+		}(c, stopStat)
 	})
 
-	var echoLayout = widgets.NewQGridLayout2()
-	echoLayout.AddWidget2(serverLabel, 0, 0, 0)
-	echoLayout.AddWidget2(serverw, 0, 1, 0)
-	echoLayout.AddWidget2(portLabel, 1, 0, 0)
-	echoLayout.AddWidget2(portw, 1, 1, 0)
-	echoLayout.AddWidget2(targetLabel, 2, 0, 0)
-	echoLayout.AddWidget2(targetw, 2, 1, 0)
-	echoLayout.AddWidget2(timeoutLabel, 3, 0, 0)
-	echoLayout.AddWidget2(timeoutw, 3, 1, 0)
-	echoLayout.AddWidget2(keyLabel, 4, 0, 0)
-	echoLayout.AddWidget2(keyw, 4, 1, 0)
-	echoLayout.AddWidget2(tcpLabel, 5, 0, 0)
-	echoLayout.AddWidget2(tcpw, 5, 1, 0)
-	echoLayout.AddWidget2(tcpbsLabel, 6, 0, 0)
-	echoLayout.AddWidget2(tcpbsw, 6, 1, 0)
-	echoLayout.AddWidget2(tcpmwLabel, 7, 0, 0)
-	echoLayout.AddWidget2(tcpmww, 7, 1, 0)
-	echoLayout.AddWidget2(tcprstLabel, 8, 0, 0)
-	echoLayout.AddWidget2(tcprstw, 8, 1, 0)
-	echoLayout.AddWidget2(tcpgzLabel, 9, 0, 0)
-	echoLayout.AddWidget2(tcpgzw, 9, 1, 0)
-	echoLayout.AddWidget2(tcpstatLabel, 10, 0, 0)
-	echoLayout.AddWidget2(tcpstatw, 10, 1, 0)
-	echoLayout.AddWidget2(nologLabel, 11, 0, 0)
-	echoLayout.AddWidget2(nologw, 11, 1, 0)
-	echoLayout.AddWidget2(loglevelLabel, 12, 0, 0)
-	echoLayout.AddWidget2(loglevelw, 12, 1, 0)
-	echoLayout.AddWidget2(sock5Label, 13, 0, 0)
-	echoLayout.AddWidget2(sock5w, 13, 1, 0)
-	echoLayout.AddWidget2(maxconnLabel, 14, 0, 0)
-	echoLayout.AddWidget2(maxconnw, 14, 1, 0)
+	exitButton := widget.NewButton("EXIT", func() {
+		if gclient != nil {
+			stopClient()
+		}
+		a.Quit()
+	})
 
-	echoLayout.AddWidget2(s5filterLabel, 15, 0, 0)
-	echoLayout.AddWidget2(s5filterw, 15, 1, 0)
-	echoLayout.AddWidget2(s5ftfileLabel, 16, 0, 0)
-	echoLayout.AddWidget2(s5ftfilew, 16, 1, 0)
+	form := container.New(&colGrid{cols: 2},
+		widget.NewLabel("server："), serverw,
+		widget.NewLabel("listen port："), portw,
+		widget.NewLabel("target addr："), targetw,
+		widget.NewLabel("timeout："), timeoutw,
+		widget.NewLabel("key："), keyw,
+		widget.NewLabel("tcp mode："), tcpw,
+		widget.NewLabel("tcp buffer size："), tcpbsw,
+		widget.NewLabel("tcp max win："), tcpmww,
+		widget.NewLabel("tcp resend time："), tcprstw,
+		widget.NewLabel("tcp compress："), tcpgzw,
+		widget.NewLabel("tcp statistic："), tcpstatw,
+		widget.NewLabel("no log："), nologw,
+		widget.NewLabel("log level："), loglevelw,
+		widget.NewLabel("sock5："), sock5w,
+		widget.NewLabel("max conn："), maxconnw,
+		widget.NewLabel("except country："), s5filterw,
+		widget.NewLabel("ip2country file："), s5ftfilew,
+		pingLabel, goButton,
+	)
+	content := container.NewVBox(form, statLabel, exitButton)
 
-	echoLayout.AddWidget2(pingLabel, 17, 0, 0)
-	echoLayout.AddWidget2(fuckButton, 17, 1, 0)
-
-	echoLayout.AddWidget3(statLabel, 18, 0, 1, 2, core.Qt__AlignVCenter)
-	echoLayout.AddWidget3(exitButton, 19, 0, 1, 2, core.Qt__AlignVCenter)
-
-	echoGroup.SetLayout(echoLayout)
-
-	var layout = widgets.NewQGridLayout2()
-	layout.AddWidget2(echoGroup, 0, 0, 0)
-
-	lg := loadJson()
-	if lg != nil {
-		gConfig := *lg
-
-		serverw.SetText(gConfig.Serverw)
-
-		portw.SetText(gConfig.Portw)
-
-		targetw.SetText(gConfig.Targetw)
-
-		timeoutw.SetText(gConfig.Timeoutw)
-
-		keyw.SetText(gConfig.Keyw)
-
-		tcpw.SetChecked(gConfig.Tcpw == "true")
-
-		tcpbsw.SetText(gConfig.Tcpbsw)
-
-		tcpmww.SetText(gConfig.Tcpmww)
-
-		tcprstw.SetText(gConfig.Tcprstw)
-
-		tcpgzw.SetText(gConfig.Tcpgzw)
-
-		tcpstatw.SetChecked(gConfig.Tcpstatw == "true")
-
-		nologw.SetChecked(gConfig.Nologw == "true")
-
-		loglevelw.SetText(gConfig.Loglevelw)
-
-		sock5w.SetChecked(gConfig.Sock5w == "true")
-
-		maxconnw.SetText(gConfig.Maxconnw)
-
-		s5filterw.SetText(gConfig.S5filterw)
-
-		s5ftfilew.SetText(gConfig.S5ftfilew)
-
-		check()
+	if lg := loadJson(); lg != nil {
+		if lg.Serverw != "" {
+			serverw.SetText(lg.Serverw)
+		}
+		if lg.Portw != "" {
+			portw.SetText(lg.Portw)
+		}
+		if lg.Targetw != "" {
+			targetw.SetText(lg.Targetw)
+		}
+		if lg.Timeoutw != "" {
+			timeoutw.SetText(lg.Timeoutw)
+		}
+		if lg.Keyw != "" {
+			keyw.SetText(lg.Keyw)
+		}
+		tcpw.SetChecked(lg.Tcpw == "true")
+		if lg.Tcpbsw != "" {
+			tcpbsw.SetText(lg.Tcpbsw)
+		}
+		if lg.Tcpmww != "" {
+			tcpmww.SetText(lg.Tcpmww)
+		}
+		if lg.Tcprstw != "" {
+			tcprstw.SetText(lg.Tcprstw)
+		}
+		if lg.Tcpgzw != "" {
+			tcpgzw.SetText(lg.Tcpgzw)
+		}
+		tcpstatw.SetChecked(lg.Tcpstatw == "true")
+		nologw.SetChecked(lg.Nologw == "true")
+		if lg.Loglevelw != "" {
+			loglevelw.SetText(lg.Loglevelw)
+		}
+		sock5w.SetChecked(lg.Sock5w == "true")
+		if lg.Maxconnw != "" {
+			maxconnw.SetText(lg.Maxconnw)
+		}
+		if lg.S5filterw != "" {
+			s5filterw.SetText(lg.S5filterw)
+		}
+		if lg.S5ftfilew != "" {
+			s5ftfilew.SetText(lg.S5ftfilew)
+		}
 	}
+	check()
 
-	centralWidget.SetLayout(layout)
-	window.SetCentralWidget(centralWidget)
-	window.SetMinimumWidth(500)
-	window.SetWindowTitle("pingtunnel-qt")
+	if desk, ok := a.(desktop.App); ok {
+		desk.SetSystemTrayIcon(theme.ComputerIcon())
+		show := fyne.NewMenuItem("Show", func() { w.Show() })
+		desk.SetSystemTrayMenu(fyne.NewMenu("pingtunnel-qt", show))
+		desk.SetSystemTrayWindow(w)
+	}
+	w.SetCloseIntercept(func() { w.Hide() })
 
-	//make the window a dialog to hide the minimize button
-	//and don't exit the app if the last window is closed/hidden
-	//but then you will need to provide some other way to close your application
-	window.SetWindowFlags(core.Qt__Dialog)
-	app.SetQuitOnLastWindowClosed(false)
+	w.SetPadded(true)
+	w.SetContent(content)
+	w.Resize(fyne.NewSize(520, content.MinSize().Height+theme.Padding()*2))
+	w.SetFixedSize(true)
+	w.ShowAndRun()
 
-	window.Show()
+	if gclient != nil {
+		stopClient()
+	}
+}
 
-	sys.Show()
+func statText(sendPkt, sendKB, recvPkt, recvKB uint64, idConn, addrConn int) string {
+	return fmt.Sprintf("send %dPacket/s %dKB/s recv %dPacket/s %dKB/s %d/%dConnections",
+		sendPkt, sendKB, recvPkt, recvKB, idConn, addrConn)
+}
 
-	widgets.QApplication_Exec()
+// colGrid 两列对齐：左列按最宽标签定宽，右列拉伸，同一行等高。
+type colGrid struct {
+	cols int
+}
 
+func (g *colGrid) minColRow(objects []fyne.CanvasObject) (colW []float32, rowH []float32) {
+	cols := g.cols
+	if cols < 1 {
+		cols = 2
+	}
+	rows := (len(objects) + cols - 1) / cols
+	colW = make([]float32, cols)
+	rowH = make([]float32, rows)
+	for i, o := range objects {
+		if o == nil || !o.Visible() {
+			continue
+		}
+		m := o.MinSize()
+		c := i % cols
+		r := i / cols
+		if m.Width > colW[c] {
+			colW[c] = m.Width
+		}
+		if m.Height > rowH[r] {
+			rowH[r] = m.Height
+		}
+	}
+	return
+}
+
+func (g *colGrid) MinSize(objects []fyne.CanvasObject) fyne.Size {
+	colW, rowH := g.minColRow(objects)
+	pad := theme.Padding()
+	var w, h float32
+	for i, cw := range colW {
+		w += cw
+		if i > 0 {
+			w += pad
+		}
+	}
+	for i, rh := range rowH {
+		h += rh
+		if i > 0 {
+			h += pad
+		}
+	}
+	return fyne.NewSize(w, h)
+}
+
+func (g *colGrid) Layout(objects []fyne.CanvasObject, size fyne.Size) {
+	cols := g.cols
+	if cols < 1 {
+		cols = 2
+	}
+	colW, rowH := g.minColRow(objects)
+	pad := theme.Padding()
+	var minW float32
+	for i, cw := range colW {
+		minW += cw
+		if i > 0 {
+			minW += pad
+		}
+	}
+	if extra := size.Width - minW; extra > 0 && len(colW) >= 2 {
+		colW[1] += extra
+	}
+	y := float32(0)
+	for r, rh := range rowH {
+		x := float32(0)
+		for c := 0; c < cols; c++ {
+			i := r*cols + c
+			if i >= len(objects) {
+				break
+			}
+			if o := objects[i]; o != nil {
+				o.Move(fyne.NewPos(x, y))
+				o.Resize(fyne.NewSize(colW[c], rh))
+			}
+			x += colW[c] + pad
+		}
+		y += rh + pad
+	}
 }
 
 type Config struct {
-	Serverw string `json:"serverw"`
-
-	Portw string `json:"portw"`
-
-	Targetw string `json:"targetw"`
-
-	Timeoutw string `json:"timeoutw"`
-
-	Keyw string `json:"keyw"`
-
-	Tcpw string `json:"tcpw"`
-
-	Tcpbsw string `json:"tcpbsw"`
-
-	Tcpmww string `json:"tcpmww"`
-
-	Tcprstw string `json:"tcprstw"`
-
-	Tcpgzw string `json:"tcpgzw"`
-
-	Tcpstatw string `json:"tcpstatw"`
-
-	Nologw string `json:"nologw"`
-
+	Serverw   string `json:"serverw"`
+	Portw     string `json:"portw"`
+	Targetw   string `json:"targetw"`
+	Timeoutw  string `json:"timeoutw"`
+	Keyw      string `json:"keyw"`
+	Tcpw      string `json:"tcpw"`
+	Tcpbsw    string `json:"tcpbsw"`
+	Tcpmww    string `json:"tcpmww"`
+	Tcprstw   string `json:"tcprstw"`
+	Tcpgzw    string `json:"tcpgzw"`
+	Tcpstatw  string `json:"tcpstatw"`
+	Nologw    string `json:"nologw"`
 	Loglevelw string `json:"loglevelw"`
-
-	Sock5w string `json:"sock5w"`
-
-	Maxconnw string `json:"maxconnw"`
-
+	Sock5w    string `json:"sock5w"`
+	Maxconnw  string `json:"maxconnw"`
 	S5filterw string `json:"s5filterw"`
-
 	S5ftfilew string `json:"s5ftfilew"`
 }
 
-func saveJson(c Config) {
-	jsonFile, err := os.OpenFile(".pingtunnel-qt.json",
-		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+func configPath() string {
+	exe, err := os.Executable()
 	if err != nil {
-		return
+		return ".pingtunnel-qt.json"
 	}
-	defer jsonFile.Close()
+	return filepath.Join(filepath.Dir(exe), ".pingtunnel-qt.json")
+}
 
-	str, err := json.Marshal(&c)
+func saveJson(c Config) {
+	f, err := os.OpenFile(configPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
-		loggo.Error("saveJson fail %s", err)
 		return
 	}
-	jsonFile.Write(str)
-	jsonFile.Close()
+	defer f.Close()
+	if err := json.NewEncoder(f).Encode(&c); err != nil {
+		loggo.Error("saveJson fail %s", err)
+	}
 }
 
 func loadJson() *Config {
-	jsonFile, err := os.Open(".pingtunnel-qt.json")
+	f, err := os.Open(configPath())
 	if err != nil {
 		return nil
 	}
-	defer jsonFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	defer f.Close()
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return nil
+	}
 	var c Config
-
-	err = json.Unmarshal(byteValue, &c)
-	if err != nil {
+	if err := json.Unmarshal(data, &c); err != nil {
 		return nil
 	}
-
-	jsonFile.Close()
 	return &c
 }
