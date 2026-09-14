@@ -6,28 +6,28 @@
 [<img src="https://img.shields.io/github/downloads/esrrhs/pingtunnel-qt/total">](https://github.com/esrrhs/pingtunnel-qt/releases)
 [<img src="https://img.shields.io/github/actions/workflow/status/esrrhs/pingtunnel-qt/go.yml?branch=master">](https://github.com/esrrhs/pingtunnel-qt/actions)
 
-[pingtunnel](https://github.com/esrrhs/pingtunnel) 的图形界面客户端。填好参数后点击 GO，出现正常 ping 值即表示连接可用。关闭窗口会最小化到托盘，点击托盘图标可再打开。
+GUI client for [pingtunnel](https://github.com/esrrhs/pingtunnel). Fill in the parameters, click GO, and a normal ping value means the connection is ready. Closing the window minimizes the app to the system tray; click the tray icon to reopen it.
 
-界面用 Go + [Fyne](https://fyne.io/) 实现，支持 Windows、macOS、Linux。当前版本见 `version.go`。
+The UI is built with Go and [Fyne](https://fyne.io/), and supports Windows, macOS, and Linux. See `version.go` for the current version.
 
-## 用法
+## Usage
 
-1. 打开程序
-2. 填写 server、listen port、target 等参数
-3. 按需开启 TCP mode / sock5；拥塞控制默认 `bb`（带宽自适应，大流量时不易把链路打满）
-4. 点击 GO
-5. 看到 ping 值后可关闭窗口，程序继续在托盘运行
+1. Launch the app
+2. Fill in server, listen port, target, and other parameters
+3. Enable TCP mode / sock5 as needed; congestion control defaults to `bb` (bandwidth-adaptive, so heavy traffic is less likely to saturate the link)
+4. Click GO
+5. After a ping value appears, you can close the window; the app keeps running in the tray
 
-「STOP」会停止隧道，「EXIT」或托盘 Quit 会退出程序。上次填写的参数会保存在可执行文件同目录的 `.pingtunnel-qt.json`。
+**STOP** stops the tunnel. **EXIT** or tray **Quit** exits the app. The last-used parameters are saved as `.pingtunnel-qt.json` in the same directory as the executable.
 
-ICMP 隧道在 Windows 上通常需要管理员权限。
+ICMP tunnels on Windows usually require administrator privileges.
 
-## 构建
+## Build
 
-需要 Go 1.26+ 和 C 编译器。Windows 可用 MSYS2 gcc。
+Requires Go 1.26+ and a C compiler. On Windows, MSYS2 gcc works.
 
 ```bash
-# Windows：必须加 -H windowsgui，否则会弹出控制台黑框
+# Windows: -H windowsgui is required, otherwise a console window pops up
 go build -ldflags="-H windowsgui" -o pingtunnel-qt.exe .
 
 # macOS / Linux
@@ -38,16 +38,16 @@ go build -o pingtunnel-qt .
 go test ./...
 ```
 
-## 发布
+## Release
 
-版本号写在 `version.go` 的 `Version`。把它改成一个还没发过的号（如 `2.0.1`）并推到 `master` 后，GitHub Actions 会：
+The version number is the `Version` constant in `version.go`. Change it to a version that has not been published yet (for example `2.0.1`) and push to `master`. GitHub Actions will then:
 
-1. 对比该版本是否已有 GitHub Release
-2. 没有则分别在 Windows / macOS / Linux 上编译打包
-3. 自动创建 `v版本号` 的 Release 并上传三个平台的压缩包
+1. Check whether that version already has a GitHub Release
+2. If not, build and package on Windows, macOS, and Linux
+3. Create a `vVERSION` Release and upload archives for all three platforms
 
-同一版本号重复推送不会再发。也可在 Actions 里手动跑 `Release` 工作流。
+Pushing the same version again will not create another release. You can also run the `Release` workflow manually from Actions.
 
-## 下载
+## Download
 
 https://github.com/esrrhs/pingtunnel-qt/releases
