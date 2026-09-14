@@ -14,7 +14,7 @@
 
 1. 打开程序
 2. 填写 server、listen port、target 等参数
-3. 按需开启 TCP mode / sock5
+3. 按需开启 TCP mode / sock5；拥塞控制默认 `bb`（带宽自适应，大流量时不易把链路打满）
 4. 点击 GO
 5. 看到 ping 值后可关闭窗口，程序继续在托盘运行
 
@@ -24,7 +24,7 @@ ICMP 隧道在 Windows 上通常需要管理员权限。
 
 ## 构建
 
-需要 Go 1.25+ 和 C 编译器。Windows 可用 MSYS2 gcc。
+需要 Go 1.26+ 和 C 编译器。Windows 可用 MSYS2 gcc。
 
 ```bash
 # Windows：必须加 -H windowsgui，否则会弹出控制台黑框

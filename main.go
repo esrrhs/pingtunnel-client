@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -20,7 +19,6 @@ import (
 
 	"github.com/esrrhs/gohome/common"
 	"github.com/esrrhs/gohome/loggo"
-	"github.com/esrrhs/gohome/thirdparty"
 	"github.com/esrrhs/pingtunnel"
 )
 
@@ -52,10 +50,8 @@ func main() {
 	loglevelw.SetText("info")
 	maxconnw := widget.NewEntry()
 	maxconnw.SetText("1000")
-	s5filterw := widget.NewEntry()
-	s5filterw.SetText("CN")
-	s5ftfilew := widget.NewEntry()
-	s5ftfilew.SetText("GeoLite2-Country.mmdb")
+	congSel := widget.NewSelect([]string{"bb", "off"}, nil)
+	congSel.SetSelected("bb")
 
 	var check func()
 	tcpw := widget.NewCheck("", func(bool) {
@@ -78,9 +74,10 @@ func main() {
 	entries := []*widget.Entry{
 		serverw, portw, targetw, timeoutw, keyw,
 		tcpbsw, tcpmww, tcprstw, tcpgzw, loglevelw,
-		maxconnw, s5filterw, s5ftfilew,
+		maxconnw,
 	}
 	checks := []*widget.Check{tcpw, tcpstatw, nologw, sock5w}
+	selects := []*widget.Select{congSel}
 
 	checking := false
 	check = func() {
@@ -92,12 +89,8 @@ func main() {
 		if sock5w.Checked {
 			tcpw.SetChecked(true)
 			targetw.Disable()
-			s5filterw.Enable()
-			s5ftfilew.Enable()
 		} else {
 			targetw.Enable()
-			s5filterw.Disable()
-			s5ftfilew.Disable()
 		}
 		if tcpw.Checked {
 			tcpbsw.Enable()
@@ -123,6 +116,9 @@ func main() {
 		for _, c := range checks {
 			c.Enable()
 		}
+		for _, s := range selects {
+			s.Enable()
+		}
 		check()
 	}
 	setBusy := func() {
@@ -131,6 +127,9 @@ func main() {
 		}
 		for _, c := range checks {
 			c.Disable()
+		}
+		for _, s := range selects {
+			s.Disable()
 		}
 	}
 
@@ -240,36 +239,15 @@ func main() {
 			openSock5 = 1
 		}
 
-		var filter func(addr string) bool
-		if openSock5 != 0 {
-			s5filter := s5filterw.Text
-			s5ftfile := s5ftfilew.Text
-			if len(s5filter) > 0 {
-				if err := thirdparty.LoadGeoip2(s5ftfile); err != nil {
-					dialog.ShowInformation("提示", "sock5 filter file "+err.Error(), w)
-					return
-				}
-			}
-			filter = func(addr string) bool {
-				if len(s5filter) <= 0 {
-					return true
-				}
-				taddr, err := net.ResolveTCPAddr("tcp", addr)
-				if err != nil {
-					return false
-				}
-				ret, err := thirdparty.GetGeoipCountryIsoCode(taddr.IP.String())
-				if err != nil || len(ret) <= 0 {
-					return false
-				}
-				return ret != s5filter
-			}
+		congestion := congSel.Selected
+		if congestion == "off" {
+			congestion = ""
 		}
 
 		listen := ":" + strconv.Itoa(port)
 		c, err := pingtunnel.NewClient(listen, serverw.Text, targetw.Text, timeout, key, "0.0.0.0",
 			tcpmode, tcpmodeBuffersize, tcpmodeMaxwin, tcpmodeResend, tcpmodeCompress,
-			tcpmodeStat, openSock5, maxconn, &filter, nil)
+			tcpmodeStat, openSock5, maxconn, nil, "", "", congestion)
 		if err != nil {
 			loggo.Error("ERROR: %s", err.Error())
 			dialog.ShowInformation("提示", "NewClient "+err.Error(), w)
@@ -277,19 +255,18 @@ func main() {
 		}
 
 		cfg := Config{
-			Serverw:   serverw.Text,
-			Portw:     portw.Text,
-			Targetw:   targetw.Text,
-			Timeoutw:  timeoutw.Text,
-			Keyw:      keyw.Text,
-			Tcpbsw:    tcpbsw.Text,
-			Tcpmww:    tcpmww.Text,
-			Tcprstw:   tcprstw.Text,
-			Tcpgzw:    tcpgzw.Text,
-			Loglevelw: loglevelw.Text,
-			Maxconnw:  maxconnw.Text,
-			S5filterw: s5filterw.Text,
-			S5ftfilew: s5ftfilew.Text,
+			Serverw:     serverw.Text,
+			Portw:       portw.Text,
+			Targetw:     targetw.Text,
+			Timeoutw:    timeoutw.Text,
+			Keyw:        keyw.Text,
+			Tcpbsw:      tcpbsw.Text,
+			Tcpmww:      tcpmww.Text,
+			Tcprstw:     tcprstw.Text,
+			Tcpgzw:      tcpgzw.Text,
+			Loglevelw:   loglevelw.Text,
+			Maxconnw:    maxconnw.Text,
+			Congestionw: congSel.Selected,
 		}
 		if tcpw.Checked {
 			cfg.Tcpw = "true"
@@ -365,8 +342,7 @@ func main() {
 		widget.NewLabel("log level："), loglevelw,
 		widget.NewLabel("sock5："), sock5w,
 		widget.NewLabel("max conn："), maxconnw,
-		widget.NewLabel("except country："), s5filterw,
-		widget.NewLabel("ip2country file："), s5ftfilew,
+		widget.NewLabel("congestion："), congSel,
 		pingLabel, goButton,
 	)
 	content := container.NewVBox(form, statLabel, exitButton)
@@ -409,11 +385,8 @@ func main() {
 		if lg.Maxconnw != "" {
 			maxconnw.SetText(lg.Maxconnw)
 		}
-		if lg.S5filterw != "" {
-			s5filterw.SetText(lg.S5filterw)
-		}
-		if lg.S5ftfilew != "" {
-			s5ftfilew.SetText(lg.S5ftfilew)
+		if lg.Congestionw != "" {
+			congSel.SetSelected(lg.Congestionw)
 		}
 	}
 	check()
@@ -527,23 +500,22 @@ func (g *colGrid) Layout(objects []fyne.CanvasObject, size fyne.Size) {
 }
 
 type Config struct {
-	Serverw   string `json:"serverw"`
-	Portw     string `json:"portw"`
-	Targetw   string `json:"targetw"`
-	Timeoutw  string `json:"timeoutw"`
-	Keyw      string `json:"keyw"`
-	Tcpw      string `json:"tcpw"`
-	Tcpbsw    string `json:"tcpbsw"`
-	Tcpmww    string `json:"tcpmww"`
-	Tcprstw   string `json:"tcprstw"`
-	Tcpgzw    string `json:"tcpgzw"`
-	Tcpstatw  string `json:"tcpstatw"`
-	Nologw    string `json:"nologw"`
-	Loglevelw string `json:"loglevelw"`
-	Sock5w    string `json:"sock5w"`
-	Maxconnw  string `json:"maxconnw"`
-	S5filterw string `json:"s5filterw"`
-	S5ftfilew string `json:"s5ftfilew"`
+	Serverw     string `json:"serverw"`
+	Portw       string `json:"portw"`
+	Targetw     string `json:"targetw"`
+	Timeoutw    string `json:"timeoutw"`
+	Keyw        string `json:"keyw"`
+	Tcpw        string `json:"tcpw"`
+	Tcpbsw      string `json:"tcpbsw"`
+	Tcpmww      string `json:"tcpmww"`
+	Tcprstw     string `json:"tcprstw"`
+	Tcpgzw      string `json:"tcpgzw"`
+	Tcpstatw    string `json:"tcpstatw"`
+	Nologw      string `json:"nologw"`
+	Loglevelw   string `json:"loglevelw"`
+	Sock5w      string `json:"sock5w"`
+	Maxconnw    string `json:"maxconnw"`
+	Congestionw string `json:"congestionw"`
 }
 
 func configPath() string {
