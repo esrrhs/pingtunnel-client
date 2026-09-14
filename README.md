@@ -1,4 +1,4 @@
-# pingtunnel-qt
+# pingtunnel-client
 
 [<img src="https://img.shields.io/github/license/esrrhs/pingtunnel-qt">](https://github.com/esrrhs/pingtunnel-qt)
 [<img src="https://img.shields.io/github/languages/top/esrrhs/pingtunnel-qt">](https://github.com/esrrhs/pingtunnel-qt)
