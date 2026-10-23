@@ -119,7 +119,7 @@ def start_vpn_service(adb, serial, action, profile_json=None):
         args.extend([
             "--es", "com.esrrhs.pingtunnel.client.extra.PROFILE_JSON", f"'{profile_json}'",
         ])
-    args.append("com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService")
+    args.extend(["-n", "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"])
     res = run_adb(adb, serial, args, check=False)
     out = ((res.stdout or "") + (res.stderr or "")).strip()
     print(f"==> am exit={res.returncode} {out}")
@@ -1194,29 +1194,62 @@ def get_guest_ip(adb, serial):
 
 
 def start_in_emulator_pingtunnel_server(adb, serial, key=E2E_SERVER_KEY):
-    """把 pingtunnel server 推进模拟器并以 root 运行。
+    """把 pingtunnel server 构建并推进模拟器，以 root 常驻运行。
 
-    服务端要接收任意 ICMP echo 请求，必须 raw socket；宿主机方案需要 root 且
-    QEMU slirp 对自定义 ICMP 的转发不可靠，放进模拟器内部（adb root 后）最稳定。
+    两个关键点（实测 Android 15 模拟器）：
+    1. 服务端要接收任意 ICMP echo 请求，必须 raw socket。默认的 Android 构建
+       （icmp_listen_android.go）优先用 dgram ping socket——它只能收 echo
+       回复，服务端会"聋"。这里用 go build -overlay 把该文件替换为 raw 版本
+       （scripts/e2e/icmp_listen_android_raw.go）再交叉编译。
+    2. 宿主机方案不可行：raw ICMP 需要 root，且 QEMU slirp 对自定义 ICMP
+       回复会截短 2 字节、丢弃重复回复，payload 敏感的协议无法工作；模拟器
+       内部（adb root）回环不经过 slirp，最稳定。
+    3. 常驻用 setsid：模拟器上 nohup 后台进程会随 adb shell 会话退出被杀。
     """
     abi = run_adb(adb, serial, ["shell", "getprop", "ro.product.cpu_abi"]).stdout.strip()
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    bin_path = os.path.join(repo_root, "app", "src", "main", "jniLibs", abi, "libpingtunnel.so")
-    if not os.path.exists(bin_path):
-        raise RuntimeError(f"未找到 {abi} 的 pingtunnel 二进制：{bin_path}（先跑 scripts/build_native.sh）")
-    run_adb(adb, serial, ["push", bin_path, "/data/local/tmp/pingtunnel"])
-    run_adb(adb, serial, ["shell", "chmod", "755", "/data/local/tmp/pingtunnel"])
-    run_adb(adb, serial, ["shell", "pkill", "-f", "pingtunnel -type server"], check=False)
+    src_dir = os.path.join(repo_root, "third_party", "pingtunnel")
+    if not os.path.isdir(os.path.join(src_dir, ".git")):
+        # build_pingtunnel.sh 用 PINGTUNNEL_DIR 时可能指向仓库外，此处兜底克隆
+        subprocess.run(
+            ["git", "clone", "https://github.com/esrrhs/pingtunnel.git", src_dir],
+            check=True,
+        )
+    overlay_src = os.path.join(repo_root, "scripts", "e2e", "icmp_listen_android_raw.go")
+    overlay = {
+        "Replace": {
+            os.path.join(src_dir, "icmp_listen_android.go"): os.path.abspath(overlay_src),
+        }
+    }
+    overlay_file = os.path.join(repo_root, "scripts", "e2e", "overlay.json")
+    with open(overlay_file, "w", encoding="utf-8") as f:
+        json.dump(overlay, f)
+    goarch = {"arm64-v8a": "arm64", "x86_64": "amd64", "x86": "386", "armeabi-v7a": "arm"}.get(abi)
+    if not goarch:
+        raise RuntimeError(f"未知 ABI: {abi}")
+    out_bin = os.path.join(repo_root, "scripts", "e2e", f"pingtunnel-server-{abi}")
+    print(f"==> 构建模拟器内服务端 ({abi})")
+    subprocess.run(
+        ["go", "build", "-overlay", overlay_file, "-trimpath", "-o", out_bin, "."],
+        cwd=os.path.join(src_dir, "cmd"),
+        env={**os.environ, "GOOS": "android", "GOARCH": goarch, "CGO_ENABLED": "0"},
+        check=True,
+    )
+    run_adb(adb, serial, ["push", out_bin, "/data/local/tmp/pingtunnel-server"])
+    run_adb(adb, serial, ["shell", "chmod", "755", "/data/local/tmp/pingtunnel-server"])
+    run_adb(adb, serial, ["shell", "pkill", "-f", "pingtunnel-server -type server"], check=False)
     time.sleep(1)
     run_adb(
         adb, serial,
-        ["shell", f"nohup /data/local/tmp/pingtunnel -type server -key {key} -nolog 1 >/dev/null 2>&1 &"],
+        ["shell", f"setsid /data/local/tmp/pingtunnel-server -type server -key {key} -nolog 1"
+                  " >/data/local/tmp/pt-server.log 2>&1 &"],
         check=False,
     )
     time.sleep(2)
-    out = run_adb(adb, serial, ["shell", "pgrep", "-f", "pingtunnel -type server"], check=False).stdout.strip()
+    out = run_adb(adb, serial, ["shell", "pgrep", "-f", "pingtunnel-server -type server"], check=False).stdout.strip()
     if not out:
-        raise RuntimeError("模拟器内 pingtunnel 服务端启动失败（adb root 是否生效？）")
+        srv_log = run_adb(adb, serial, ["shell", "cat", "/data/local/tmp/pt-server.log"], check=False).stdout
+        raise RuntimeError(f"模拟器内 pingtunnel 服务端启动失败（adb root 是否生效？）日志：\n{srv_log}")
     print(f"==> 模拟器内 pingtunnel 服务端已启动 (key={key}, pid={out.splitlines()[0]})")
 
 
@@ -1644,7 +1677,7 @@ def main():
         run_adb(adb, serial, [
             "shell", "am", "start-foreground-service",
             "-a", "com.esrrhs.pingtunnel.client.action.DISCONNECT",
-            "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"
+            "-n", "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"
         ])
         wait_for_tun(adb, serial, should_exist=False, timeout=8)
         print("==> pingtunnel 模式全协议测试全部通过！\n")
@@ -1658,7 +1691,7 @@ def main():
         run_adb(adb, serial, [
             "shell", "am", "start-foreground-service",
             "-a", "com.esrrhs.pingtunnel.client.action.DISCONNECT",
-            "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"
+            "-n", "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"
         ], check=False)
         tcp_server.stop()
         udp_server.stop()
