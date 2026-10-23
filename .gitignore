@@ -27,3 +27,7 @@ __pycache__/
 
 # ZCode 会话数据（本地）
 .zcode/
+
+# E2E 临时构建产物
+scripts/e2e/overlay.json
+scripts/e2e/pingtunnel-server-*

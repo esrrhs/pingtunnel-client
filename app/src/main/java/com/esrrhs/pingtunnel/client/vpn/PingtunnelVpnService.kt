@@ -256,10 +256,19 @@ class PingtunnelVpnService : VpnService() {
         }
         val config = profile.config
         activeProfileId = profile.id
-
-        // 1. 拉起上游：pingtunnel 子进程在本机 127.0.0.1 起 SOCKS5（CONNECT + UDP ASSOCIATE）。
-        //    注意端口上线只代表进程就绪，隧道真实可用性由 SocksProbe 端到端探测负责。
         val generation = ++sessionGeneration
+
+        // 1. 先建立 TUN 再拉起内核子进程：内核的 ICMP ping socket 若在 VPN 建立
+        //    之前创建，VPN 起来后（per-UID 网络规则变化）会停止收到回包；
+        //    在 VPN 就绪后创建的 socket 收发均正常（实测 Android 15 模拟器）。
+        //    若后续内核启动失败，connect() 的 teardown 路径会回收已建立的 TUN。
+        val tun = buildTun(profile)
+            .establish() ?: throw PingtunnelException(getString(R.string.error_establish))
+        Log.i(TAG, "tun established")
+        tunInterface = tun
+
+        // 1b. 拉起上游：pingtunnel 子进程在本机 127.0.0.1 起 SOCKS5（CONNECT + UDP ASSOCIATE）。
+        //     注意端口上线只代表进程就绪，隧道真实可用性由 SocksProbe 端到端探测负责。
         val core = PingtunnelProcess(this)
         core.onUnexpectedExit = {
             if (generation == sessionGeneration &&
@@ -328,11 +337,6 @@ class PingtunnelVpnService : VpnService() {
             socksPort
         }
         ActiveSession.socksPort = hevSocksPort
-        // 2. 建立 TUN（分应用规则；路由始终全抓，CN/LAN 分流在用户态分流器完成）
-        val tun = buildTun(profile)
-            .establish() ?: throw PingtunnelException(getString(R.string.error_establish))
-        Log.i(TAG, "tun established")
-        tunInterface = tun
 
         // 3. hev：getFd() 只传 int，PFD 所有权保留在本类
         val configFile = writeHevConfig(hevSocksPort, profile.config.enableIpv6)
