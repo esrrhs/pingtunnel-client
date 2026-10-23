@@ -1,0 +1,101 @@
+name: Emulator VPN E2E Tests
+
+on:
+  push:
+    branches: [master]
+    # 纯文档推送不会改变任何被测行为，省掉一次约 7 分钟的全量模拟器跑。
+    # PR 不加过滤：PR 该做完整验证。手动触发（workflow_dispatch）也不受此过滤影响。
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  emulator-test:
+    name: Android Emulator VPN E2E Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Android NDK
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          SM="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SM" ]; then
+            SM=$(find "$SDK" -path '*/cmdline-tools/*/bin/sdkmanager' | sort | tail -1)
+          fi
+          test -n "$SM" && test -x "$SM"
+          yes | "$SM" --licenses >/dev/null || true
+          NDK_PKG=$("$SM" --list 2>/dev/null | awk '/^[[:space:]]*ndk;/{print $1}' | sort -V | tail -1)
+          echo "Installing $NDK_PKG"
+          test -n "$NDK_PKG"
+          "$SM" --install "$NDK_PKG"
+          VER="${NDK_PKG#ndk;}"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$SDK/ndk/$VER" >> "$GITHUB_ENV"
+
+      - name: Build native libraries
+        env:
+          # 模拟器是 x86_64，只编这一套以缩短流水线时间
+          PINGTUNNEL_ABIS: x86_64
+          HEV_ABIS: x86_64
+        run: bash scripts/build_native.sh
+
+      - name: Build Debug APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run Emulator VPN E2E Test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            # pingtunnel server 跑在模拟器内部（adb root），App 经免 root ping socket 建隧道，
+            # 覆盖全协议与飞行模式切网后隧道恢复
+            python3 -u scripts/test_emulator_vpn_e2e.py --apk app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Artifacts on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-e2e-logs
+          path: |
+            app/build/reports
+          if-no-files-found: ignore
