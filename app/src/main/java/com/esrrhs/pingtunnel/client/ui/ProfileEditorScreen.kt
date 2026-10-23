@@ -1,0 +1,372 @@
+package com.esrrhs.pingtunnel.client.ui
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import com.esrrhs.pingtunnel.client.R
+import com.esrrhs.pingtunnel.client.pingtunnel.PerAppMode
+import com.esrrhs.pingtunnel.client.pingtunnel.Profile
+import com.esrrhs.pingtunnel.client.pingtunnel.PingtunnelConfig
+import com.esrrhs.pingtunnel.client.pingtunnel.ValidationError
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileEditorScreen(
+    initial: Profile,
+    isNew: Boolean,
+    onSave: (Profile, (ValidationError?) -> Unit) -> Unit,
+    onPickApps: (Set<String>) -> Unit,
+    onBack: () -> Unit,
+) {
+    // 系统 BACK 放弃编辑回主界面，与顶栏返回一致
+    BackHandler(onBack = onBack)
+    var profile by remember { mutableStateOf(initial) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        stringResource(
+                            if (isNew) R.string.editor_add_title else R.string.editor_edit_title,
+                        ),
+                    )
+                },
+                navigationIcon = {
+                    TextButton(onClick = onBack) {
+                        Text(stringResource(R.string.action_back))
+                    }
+                },
+                actions = {
+                    TextButton(onClick = { onSave(profile) { error -> if (error == null) onBack() } }) {
+                        Text(stringResource(R.string.action_save))
+                    }
+                },
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            OutlinedTextField(
+                value = profile.name,
+                onValueChange = { profile = profile.copy(name = it) },
+                label = { Text(stringResource(R.string.field_name)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            PerAppSection(
+                profile = profile,
+                onChange = { profile = it },
+                onPickApps = onPickApps,
+            )
+
+            SmartSplitSection(
+                profile = profile,
+                onChange = { profile = it },
+            )
+
+            ConnectionFields(
+                config = profile.config,
+                onChange = { c -> profile = profile.copy(config = c) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun PerAppSection(
+    profile: Profile,
+    onChange: (Profile) -> Unit,
+    onPickApps: (Set<String>) -> Unit,
+) {
+    Text(text = stringResource(R.string.section_per_app), style = typography.titleMedium)
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        PerAppMode.entries.forEach { mode ->
+            FilterChip(
+                selected = profile.perAppMode == mode,
+                onClick = { onChange(profile.copy(perAppMode = mode)) },
+                label = {
+                    Text(
+                        stringResource(
+                            when (mode) {
+                                PerAppMode.ALL -> R.string.per_app_all
+                                PerAppMode.ALLOWED -> R.string.per_app_allowed
+                                PerAppMode.DISALLOWED -> R.string.per_app_disallowed
+                            },
+                        ),
+                    )
+                },
+            )
+        }
+    }
+    if (profile.perAppMode != PerAppMode.ALL) {
+        OutlinedButton(onClick = { onPickApps(profile.perAppPackages.toSet()) }) {
+            Text(stringResource(R.string.action_choose_apps, profile.perAppPackages.size))
+        }
+    }
+}
+
+@Composable
+private fun SmartSplitSection(
+    profile: Profile,
+    onChange: (Profile) -> Unit,
+) {
+    Text(text = stringResource(R.string.section_smart_split), style = typography.titleMedium)
+
+    SplitToggle(
+        title = stringResource(R.string.split_bypass_lan_title),
+        subtitle = stringResource(R.string.split_bypass_lan_subtitle),
+        checked = profile.bypassLan,
+        onCheckedChange = { v -> onChange(profile.copy(bypassLan = v)) },
+    )
+    SplitToggle(
+        title = stringResource(R.string.split_bypass_cn_title),
+        subtitle = stringResource(R.string.split_bypass_cn_subtitle),
+        checked = profile.bypassCn,
+        onCheckedChange = { v -> onChange(profile.copy(bypassCn = v)) },
+    )
+}
+
+@Composable
+private fun SplitToggle(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = typography.bodyLarge)
+            Text(text = subtitle, style = typography.bodySmall)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ConnectionFields(
+    config: PingtunnelConfig,
+    onChange: (PingtunnelConfig) -> Unit,
+) {
+    var encryptExpanded by remember { mutableStateOf(false) }
+    var advancedShown by remember { mutableStateOf(false) }
+
+    OutlinedTextField(
+        value = config.serverHost,
+        onValueChange = { onChange(config.copy(serverHost = it)) },
+        label = { Text(stringResource(R.string.field_server_host)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+
+    // 加密模式：空 = 旧式纯数字 key 弱鉴权；否则 AEAD 加密 + 密钥
+    ExposedDropdownMenuBox(
+        expanded = encryptExpanded,
+        onExpandedChange = { encryptExpanded = it },
+    ) {
+        OutlinedTextField(
+            value = stringResource(
+                if (config.encrypted) R.string.encrypt_mode_named else R.string.encrypt_mode_none,
+                config.encryptMode,
+            ),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.field_encrypt_mode)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = encryptExpanded) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = encryptExpanded,
+            onDismissRequest = { encryptExpanded = false },
+        ) {
+            PingtunnelConfig.ENCRYPT_MODES.forEach { mode ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            stringResource(
+                                if (mode.isEmpty()) R.string.encrypt_mode_none else R.string.encrypt_mode_named,
+                                mode,
+                            ),
+                        )
+                    },
+                    onClick = {
+                        onChange(config.copy(encryptMode = mode))
+                        encryptExpanded = false
+                    },
+                )
+            }
+        }
+    }
+
+    if (config.encrypted) {
+        OutlinedTextField(
+            value = config.encryptKey,
+            onValueChange = { onChange(config.copy(encryptKey = it)) },
+            label = { Text(stringResource(R.string.field_encrypt_key)) },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    } else {
+        OutlinedTextField(
+            value = if (config.key > 0) config.key.toString() else "",
+            onValueChange = { text ->
+                onChange(config.copy(key = text.toLongOrNull() ?: 0))
+            },
+            label = { Text(stringResource(R.string.field_key)) },
+            supportingText = { Text(stringResource(R.string.field_key_hint)) },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+
+    TextButton(onClick = { advancedShown = !advancedShown }) {
+        Text(
+            stringResource(
+                if (advancedShown) R.string.advanced_hide else R.string.advanced_show,
+            ),
+        )
+    }
+
+    if (advancedShown) {
+        OutlinedTextField(
+            value = config.timeout.toString(),
+            onValueChange = { text -> onChange(config.copy(timeout = text.toIntOrNull() ?: 0)) },
+            label = { Text(stringResource(R.string.field_timeout)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = config.tcpBufferSize.toString(),
+            onValueChange = { text ->
+                onChange(config.copy(tcpBufferSize = text.toIntOrNull() ?: 0))
+            },
+            label = { Text(stringResource(R.string.field_tcp_buffer)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = config.tcpMaxWin.toString(),
+            onValueChange = { text ->
+                onChange(config.copy(tcpMaxWin = text.toIntOrNull() ?: 0))
+            },
+            label = { Text(stringResource(R.string.field_tcp_maxwin)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = config.tcpResendTimems.toString(),
+            onValueChange = { text ->
+                onChange(config.copy(tcpResendTimems = text.toIntOrNull() ?: 0))
+            },
+            label = { Text(stringResource(R.string.field_tcp_resend)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = config.tcpCompress.toString(),
+            onValueChange = { text ->
+                onChange(config.copy(tcpCompress = text.toIntOrNull() ?: 0))
+            },
+            label = { Text(stringResource(R.string.field_tcp_compress)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = if (config.maxConn > 0) config.maxConn.toString() else "",
+            onValueChange = { text ->
+                onChange(config.copy(maxConn = text.toIntOrNull() ?: 0))
+            },
+            label = { Text(stringResource(R.string.field_maxconn)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        SplitToggle(
+            title = stringResource(R.string.field_congestion_title),
+            subtitle = stringResource(R.string.field_congestion_subtitle),
+            checked = config.congestion.isNotBlank(),
+            onCheckedChange = { v ->
+                onChange(
+                    config.copy(
+                        congestion = if (v) PingtunnelConfig.DEFAULT_CONGESTION else "",
+                    ),
+                )
+            },
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column {
+            Text(text = stringResource(R.string.field_ipv6_title), style = typography.bodyLarge)
+            Text(
+                text = stringResource(R.string.field_ipv6_subtitle),
+                style = typography.bodySmall,
+            )
+        }
+        Switch(
+            checked = config.enableIpv6,
+            onCheckedChange = { onChange(config.copy(enableIpv6 = it)) },
+        )
+    }
+
+    Spacer(modifier = Modifier.width(1.dp))
+}

@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PingTunnel</string>
+
+    <!-- 通知 / 磁贴 -->
+    <string name="notif_channel_name">VPN 状态</string>
+    <string name="notif_connecting">正在连接…</string>
+    <string name="notif_connected">已连接 · %1$s</string>
+    <string name="notif_connected_with_rate">已连接 · %1$s  ↑ %2$s  ↓ %3$s</string>
+    <string name="notif_connected_with_rate_ping">已连接 · %1$s  ↑ %2$s  ↓ %3$s  · %4$s</string>
+    <string name="notif_disconnecting">正在断开…</string>
+    <string name="notif_reconnecting">连接已断开，正在重连…</string>
+    <string name="notif_failover">正在切换到备用配置…</string>
+    <string name="notif_paused_trusted">可信网络中，VPN 已暂停</string>
+    <string name="tile_label">PingTunnel VPN</string>
+    <string name="tile_disconnected">未连接</string>
+    <string name="tile_connecting">连接中…</string>
+    <string name="tile_connected">已连接</string>
+    <string name="tile_disconnecting">断开中…</string>
+    <string name="tile_paused">已暂停</string>
+
+    <!-- 错误 -->
+    <string name="error_establish">无法建立 VPN 接口（establish 返回 null，请重试或检查系统 VPN 设置）</string>
+    <string name="error_vpn_consent">系统尚未授权 VPN，无法建立隧道</string>
+    <string name="error_hev_start">hev-socks5-tunnel 启动失败</string>
+    <string name="error_hev_missing">缺少 libhev-socks5-tunnel.so，请先运行 scripts/build_native.sh 再打包</string>
+    <string name="error_rule_proxy">域名分流代理启动失败</string>
+    <string name="setting_domain_direct_title">域名直连规则</string>
+    <string name="setting_domain_direct_subtitle">内置约 11 万个大陆域名直连（dnsmasq-china-list，含子域名，TCP/UDP 均生效），其余走代理；下方可追加自定义域名</string>
+    <string name="domain_rules_hint">追加自定义直连域名，每行一个，例如 baidu.com；# 开头为注释</string>
+    <string name="error_no_profile">请先添加配置</string>
+    <string name="error_connect_failed">连接失败</string>
+    <string name="error_tunnel_lost">pingtunnel 连接已断开，请检查网络后重连</string>
+    <string name="error_reconnect_failed">多次重连失败，请检查网络或 Server</string>
+    <string name="error_no_network">当前网络不可用，请检查网络连接后重试</string>
+    <string name="error_auth_failed">服务器认证失败（key/encrypt 不匹配），已停止重连</string>
+    <string name="err_name_required">请填写配置名称</string>
+    <string name="err_apps_required">「仅代理选中」模式至少勾选一个 App</string>
+    <string name="err_host_required">请填写服务器地址</string>
+    <string name="err_key_range">Key 需为 0~2147483647 的纯数字</string>
+    <string name="err_encrypt_mode_unsupported">加密模式无效，仅支持：aes128、aes256、chacha20</string>
+    <string name="err_encrypt_key_required">启用加密时必须填写加密密钥</string>
+    <string name="err_tcp_maxwin_too_big">TCP 最大窗口过大（上限 100000）</string>
+    <string name="err_tcp_params_range">高级参数数值超出有效范围</string>
+    <string name="error_missing_native">缺少 libpingtunnel.so，请先运行 scripts/build_native.sh 再打包</string>
+    <string name="error_pingtunnel_session">无法建立 pingtunnel 会话（连接超时），请检查 server 地址、key/encrypt 与网络：\n%1$s</string>
+    <string name="error_pingtunnel_exited">pingtunnel 客户端进程提前退出：\n%1$s</string>
+    <string name="log_no_output">无日志</string>
+
+    <!-- 通用 -->
+    <string name="action_back">返回</string>
+    <string name="action_save">保存</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_clear">清空</string>
+    <string name="action_close">关闭</string>
+    <string name="action_send">发送</string>
+    <string name="action_add">添加</string>
+    <string name="action_confirm">确定</string>
+
+    <!-- MainActivity 提示 -->
+    <string name="toast_vpn_permission_denied">未授予 VPN 权限，无法连接</string>
+    <string name="toast_add_profile_first">请先添加配置</string>
+    <string name="toast_invalid_qr">二维码内容不是有效的 pingtunnel 配置</string>
+    <string name="toast_imported">已导入配置：%1$s</string>
+    <string name="toast_bad_link">链接内容不是有效的 pingtunnel 配置</string>
+    <string name="toast_exported">已导出 %1$d 个配置</string>
+    <string name="toast_export_failed">导出失败：%1$s</string>
+    <string name="toast_import_empty">文件中没有有效配置</string>
+    <string name="toast_imported_count">已导入 %1$d 个配置</string>
+    <string name="toast_import_partial">已导入 %1$d 个配置，忽略 %2$d 个无效配置</string>
+    <string name="toast_import_failed">导入失败：%1$s</string>
+
+    <string name="scan_prompt">将配置二维码对准取景框</string>
+
+    <!-- 主界面 -->
+    <string name="menu_logs">运行日志</string>
+    <string name="empty_profiles">暂无配置，点下方按钮添加，或扫码 / 从文件导入。</string>
+    <string name="action_scan">扫码</string>
+    <string name="action_import">导入</string>
+    <string name="action_export">导出</string>
+    <string name="action_stats">统计</string>
+    <string name="action_check">自检</string>
+    <string name="action_settings">设置</string>
+    <string name="state_disconnected">未连接</string>
+    <string name="state_connecting">连接中…</string>
+    <string name="state_connected">已连接</string>
+    <string name="state_disconnecting">断开中…</string>
+    <string name="state_paused">已暂停（可信网络）</string>
+    <string name="state_error">错误</string>
+    <string name="action_add_profile">添加配置</string>
+    <string name="empty_profiles_short">未选择配置</string>
+    <string name="sheet_choose_profile">选择配置</string>
+    <string name="ping_untested">未测</string>
+    <string name="ping_ms">%1$d ms</string>
+    <string name="ping_testing">测速中…</string>
+    <string name="action_ping">测速</string>
+    <string name="toast_ping_failed">测速失败：无法在限时内连通服务器</string>
+    <string name="action_qr">二维码</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_delete">删除</string>
+    <string name="format_traffic">↑ %1$s    ↓ %2$s</string>
+
+    <!-- 流量统计页 -->
+    <string name="stats_title">流量统计</string>
+    <string name="stats_current_session">当前会话</string>
+    <string name="stats_reconnecting">重连中…</string>
+    <string name="stats_duration">连接时长：%1$s</string>
+    <string name="stats_up_rate">↑ %1$s（%2$s）</string>
+    <string name="stats_down_rate">↓ %1$s（%2$s）</string>
+    <string name="stats_totals">累计流量（全部配置）</string>
+    <string name="stats_total_line">↑ %1$s    ↓ %2$s    合计 %3$s</string>
+    <string name="stats_per_profile">分配置统计</string>
+    <string name="action_reset_all">清空全部累计流量</string>
+    <string name="stats_reset_all_title">清空累计流量？</string>
+    <string name="stats_reset_all_msg">各配置的累计上下行将被清零，配置本身不受影响。此操作不可撤销。</string>
+    <string name="stats_reset_one_title">清空该配置流量？</string>
+    <string name="stats_reset_one_msg">该配置的累计上下行将被清零，配置本身不受影响。</string>
+    <string name="action_reset_short">清零</string>
+
+    <!-- 设置页 -->
+    <string name="settings_title">全局设置</string>
+    <string name="setting_boot_title">开机自动连接</string>
+    <string name="setting_boot_subtitle">设备重启后自动连接上次使用的配置</string>
+    <string name="setting_reconnect_title">断线自动重连</string>
+    <string name="setting_reconnect_subtitle">连接意外中断或切换 WiFi/蜂窝网络时按 1s/2s/4s… 退避自动重连（最多 5 次）</string>
+    <string name="setting_failover_title">故障自动切换</string>
+    <string name="setting_failover_subtitle">当前配置多次重连失败后，自动切到延迟最低的其它配置</string>
+    <string name="setting_bypass_lan_title">新配置默认绕过局域网</string>
+    <string name="setting_bypass_lan_subtitle">新建配置时默认开启「绕过私有网段」智能分流</string>
+    <string name="setting_trusted_title">可信 WiFi 自动暂停</string>
+    <string name="setting_trusted_subtitle">连到下列 WiFi 时暂停 VPN，离开后自动恢复；需保持 VPN 已连接过一次以启用监听</string>
+    <string name="ssid_field_label">WiFi 名称（SSID）</string>
+    <string name="trusted_empty">尚未添加可信 WiFi</string>
+    <string name="action_add_current_wifi">添加当前连接的 WiFi</string>
+    <string name="toast_location_required">需要定位权限才能读取当前 WiFi 名称</string>
+    <string name="toast_wifi_unavailable">无法获取当前 WiFi 名称（需定位权限且已连 WiFi）</string>
+    <string name="toast_wifi_added">已添加：%1$s</string>
+    <string name="trusted_chip_remove">✕ %1$s</string>
+    <string name="alwayson_title">系统常驻 VPN（Always-on）</string>
+    <string name="alwayson_state_on">当前状态：已开启（系统会在重启后自动拉起本 VPN）</string>
+    <string name="alwayson_state_off">当前状态：未开启</string>
+    <string name="alwayson_steps">Android 不允许 App 自行开启常驻 VPN，需要手动设置：\n1. 点下方按钮打开系统 VPN 设置；\n2. 找到「PingTunnel」，点旁边的齿轮/设置图标；\n3. 开启「始终开启的 VPN」；\n4. 如需全程防泄漏，再开启「阻止未使用 VPN 的连接」。\n\n也可以在通知栏 Quick Settings 的编辑页把「PingTunnel VPN」磁贴拖到常用位置，一键启停。</string>
+    <string name="action_open_vpn_settings">打开系统 VPN 设置</string>
+    <string name="toast_vpn_settings_unavailable">无法打开系统设置，请手动进入 VPN 设置</string>
+
+    <!-- 配置编辑页 -->
+    <string name="field_name">配置名称</string>
+    <string name="editor_add_title">添加配置</string>
+    <string name="editor_edit_title">编辑配置</string>
+    <string name="section_per_app">分应用代理</string>
+    <string name="per_app_all">全部</string>
+    <string name="per_app_allowed">仅选中</string>
+    <string name="per_app_disallowed">排除选中</string>
+    <string name="action_choose_apps">选择应用（%1$d）</string>
+    <string name="section_smart_split">智能分流</string>
+    <string name="split_bypass_lan_title">绕过局域网</string>
+    <string name="split_bypass_lan_subtitle">私有网段直连，其余走代理（含 IPv6 全球单播）</string>
+    <string name="split_bypass_cn_title">CN 直连（chnroute）</string>
+    <string name="split_bypass_cn_subtitle">中国大陆 IP 直连，其它地址走代理；数据来自 APNIC</string>
+    <string name="field_server_host">服务器地址（域名或 IP）</string>
+    <string name="field_encrypt_mode">加密模式</string>
+    <string name="encrypt_mode_none">不加密（旧式数字 Key）</string>
+    <string name="encrypt_mode_named">%1$s 加密</string>
+    <string name="field_encrypt_key">加密密钥</string>
+    <string name="field_key">认证 Key</string>
+    <string name="field_key_hint">纯数字，0~2147483647，需与服务端一致</string>
+    <string name="advanced_show">高级设置 ▾</string>
+    <string name="advanced_hide">高级设置 ▴</string>
+    <string name="field_timeout">连接超时（秒）</string>
+    <string name="field_tcp_buffer">TCP 收发缓冲区（字节）</string>
+    <string name="field_tcp_maxwin">TCP 最大窗口</string>
+    <string name="field_tcp_resend">TCP 重传超时（毫秒）</string>
+    <string name="field_tcp_compress">TCP 压缩阈值（字节，0=关闭）</string>
+    <string name="field_maxconn">最大连接数（0=不限）</string>
+    <string name="field_congestion_title">拥塞控制（bb）</string>
+    <string name="field_congestion_subtitle">带宽自适应，防止大流量打满网络导致断网</string>
+    <string name="field_ipv6_title">接管 IPv6 流量</string>
+    <string name="field_ipv6_subtitle">关闭则仅代理 IPv4（IPv6 可能直连）</string>
+
+    <!-- 应用选择页 -->
+    <string name="app_picker_title">选择应用（已选 %1$d）</string>
+    <string name="app_picker_search">搜索应用名称或包名</string>
+
+    <!-- 日志页 -->
+    <string name="logs_empty">（暂无日志）</string>
+    <string name="logs_history_marker">……（历史日志截断）……</string>
+
+    <!-- 二维码分享 -->
+    <string name="qr_title">分享配置 · %1$s</string>
+    <string name="qr_hint">用其它设备扫码添加，或点右侧发送文本</string>
+    <string name="qr_too_large">配置内容过长，超出二维码容量，请改用文本发送</string>
+    <string name="qr_share_chooser">分享配置</string>
+    <string name="qr_content_description">QR code</string>
+
+    <!-- 当前连接 -->
+    <string name="action_connections">连接</string>
+    <string name="conn_title">当前连接</string>
+    <string name="conn_unknown_app">未知应用（uid=%1$d）</string>
+    <string name="conn_count">%1$d 条连接</string>
+    <string name="conn_count_closed">%1$d 条已结束</string>
+    <string name="conn_active_count">%1$d 活跃</string>
+    <string name="conn_direct_count">%1$d 直连</string>
+    <string name="conn_direct">直连</string>
+    <string name="conn_closed">已结束</string>
+    <string name="conn_totals">连接累计：↑ %1$s　↓ %2$s</string>
+    <string name="conn_since">%1$s · %2$s</string>
+    <string name="conn_pair">↑ %1$s　↓ %2$s</string>
+    <string name="conn_empty">当前没有检测到走隧道的连接</string>
+    <string name="conn_proxy_label">当前隧道代理</string>
+    <string name="conn_proxy_none">无活动配置</string>
+    <string name="conn_via_proxy">经代理 · %1$s</string>
+    <string name="conn_disconnected_hint">VPN 未连接。连接后这里会实时显示正在走隧道的应用及其连接、速率与流量。</string>
+
+    <!-- 连接历史 -->
+    <string name="action_history">历史</string>
+    <string name="history_title">连接历史</string>
+    <string name="history_empty">还没有连接记录。连接 VPN 后，每条经过隧道的连接都会记录在这里。</string>
+    <string name="history_clear">清空历史</string>
+    <string name="history_clear_title">清空连接历史？</string>
+    <string name="history_clear_msg">全部单连接记录将被清空，不影响配置与当前连接。此操作不可撤销。</string>
+    <string name="history_delete_one">删除该记录</string>
+    <string name="history_route_proxy">代理</string>
+    <string name="history_route_unknown">未知</string>
+    <string name="history_result_success">成功</string>
+    <string name="history_result_failed">失败</string>
+    <string name="history_result_unknown">未知</string>
+    <string name="history_connect_ms">建连 %1$d ms</string>
+    <string name="history_detail_line">↑ %1$s　↓ %2$s　·　持续 %3$s</string>
+    <string name="history_reason">原因：%1$s</string>
+    <string name="history_filter_all">全部</string>
+    <string name="history_filter_direct">直连</string>
+    <string name="history_filter_empty">没有符合筛选条件的连接记录</string>
+    <string name="history_filter_reset">重置筛选</string>
+    <string name="history_count">共 %1$d 条</string>
+    <string name="history_count_filtered">筛选出 %1$d / %2$d 条</string>
+
+    <!-- 查 IP -->
+    <string name="action_ip_query">查IP</string>
+    <string name="ip_title">我的 IP</string>
+    <string name="ip_exit">隧道出口</string>
+    <string name="ip_direct">本地直连</string>
+    <string name="ip_querying">正在查询 IP 归属地…</string>
+    <string name="ip_failed">查询失败，请检查网络后重试。</string>
+    <string name="ip_retry">重试</string>
+    <string name="ip_refresh">刷新</string>
+    <string name="ip_not_connected_hint">当前未连接 VPN，仅显示本地直连出口。</string>
+
+    <!-- 连接自检 -->
+    <string name="check_running_title">正在自检…</string>
+    <string name="check_running_text">正在对比直连与经隧道的出口 IP，并检查远端 DNS 路径</string>
+    <string name="check_ok_title">自检通过</string>
+    <string name="check_ok_text">流量已走 pingtunnel 服务端 出口，域名经远端解析。</string>
+    <string name="check_same_title">出口相同</string>
+    <string name="check_same_text">隧道出口 IP 与直连一致，请检查分流/服务器配置。</string>
+    <string name="check_proxy_failed_title">隧道不可用</string>
+    <string name="check_proxy_failed_text">直连正常，但经隧道无法访问外网，请查看运行日志。</string>
+    <string name="check_network_failed_title">检测失败</string>
+    <string name="check_network_failed_text">直连也无法访问检测服务，请检查网络。</string>
+    <string name="check_direct_ip">直连出口：%1$s</string>
+    <string name="check_proxy_ip">隧道出口：%1$s</string>
+    <string name="check_dns_ok">远端 DNS 路径：正常</string>
+    <string name="check_dns_bad">远端 DNS 路径：不可用</string>
+    <string name="check_latency">隧道建连：%1$d ms</string>
+    <string name="value_dash">—</string>
+
+    <!-- 防泄漏检测 -->
+    <string name="leak_title">防泄漏检测</string>
+    <string name="leak_run">开始检测（IPv4 / IPv6 / DNS）</string>
+    <string name="leak_need_connection">需要先连接 VPN 后才能检测。</string>
+    <string name="leak_running">正在经隧道检测，请稍候…</string>
+    <string name="leak_ipv4_title">IPv4 出口</string>
+    <string name="leak_ipv6_title">IPv6</string>
+    <string name="leak_ipv6_direct">直连 IPv6：%1$s</string>
+    <string name="leak_ipv6_proxy">隧道 IPv6：%1$s</string>
+    <string name="leak_ipv6_tunnel_ok">隧道具备 IPv6 出口；确认系统/浏览器无直连 IPv6 泄漏</string>
+    <string name="leak_dns_title">DNS 解析器（经隧道探测）</string>
+    <string name="leak_dns_ok">检测到 %1$d 个解析器，DNS 由 pingtunnel 服务端 端解析，未走本地运营商</string>
+    <string name="leak_dns_none">未检测到解析器，请重试或更换支持 UDP 的网络</string>
+    <string name="leak_dns_failed">DNS 检测服务不可达，请稍后重试</string>
+    <string name="leak_webrtc_title">WebRTC</string>
+    <string name="leak_webrtc_text">本 App 自身被排除在 VPN 之外，App 内 WebView 的 WebRTC 不经过隧道，检测结果无效。请用系统浏览器（流量在 VPN 内）打开下面网站查看 STUN 候选地址：</string>
+    <string name="leak_webrtc_browserleaks">browserleaks.com/webrtc</string>
+    <string name="leak_webrtc_ipleak">ipleak.net</string>
+    <string name="action_leak">防泄漏</string>
+    <string name="privacy_policy_title">隐私政策</string>
+    <string name="privacy_policy_subtitle">查看本应用如何处理数据（GitHub Pages）</string>
+    <string name="privacy_policy_url">https://github.com/esrrhs/pingtunnel-client</string>
+</resources>

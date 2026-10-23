@@ -1,7 +1,29 @@
+*.iml
+.gradle/
+.kotlin/
+local.properties
+keystore.properties
+*.keystore
+*.jks
 .idea/
-*.exe
-*.exe~
-*.syso
-/pingtunnel-qt
-.pingtunnel-qt.json
-*.log
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# third_party 源码与 native 构建产物由 scripts/build_native.sh 生成
+third_party/
+app/src/main/jniLibs/*/libpingtunnel.so
+app/src/main/jniLibs/*/libhev-socks5-tunnel.so
+
+# Python
+__pycache__/
+*.pyc
+
+
+# WorkBuddy 工作空间记忆（本地）
+.workbuddy/
+
+# ZCode 会话数据（本地）
+.zcode/

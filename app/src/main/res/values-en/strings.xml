@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PingTunnel</string>
+
+    <!-- Notification / tile -->
+    <string name="notif_channel_name">VPN status</string>
+    <string name="notif_connecting">Connecting…</string>
+    <string name="notif_connected">Connected · %1$s</string>
+    <string name="notif_connected_with_rate">Connected · %1$s  ↑ %2$s  ↓ %3$s</string>
+    <string name="notif_connected_with_rate_ping">Connected · %1$s  ↑ %2$s  ↓ %3$s  · %4$s</string>
+    <string name="notif_disconnecting">Disconnecting…</string>
+    <string name="notif_reconnecting">Connection lost, reconnecting…</string>
+    <string name="notif_failover">Switching to backup profile…</string>
+    <string name="notif_paused_trusted">VPN paused on a trusted network</string>
+    <string name="tile_label">PingTunnel VPN</string>
+    <string name="tile_disconnected">Disconnected</string>
+    <string name="tile_connecting">Connecting…</string>
+    <string name="tile_connected">Connected</string>
+    <string name="tile_disconnecting">Disconnecting…</string>
+    <string name="tile_paused">Paused</string>
+
+    <!-- Errors -->
+    <string name="error_establish">Cannot create the VPN interface (establish returned null). Retry or check system VPN settings.</string>
+    <string name="error_vpn_consent">VPN permission has not been granted</string>
+    <string name="error_hev_start">Failed to start hev-socks5-tunnel</string>
+    <string name="error_hev_missing">libhev-socks5-tunnel.so is missing. Run scripts/build_native.sh before packaging.</string>
+    <string name="error_rule_proxy">Failed to start the domain rule proxy</string>
+    <string name="setting_domain_direct_title">Direct domain rules</string>
+    <string name="setting_domain_direct_subtitle">~110k built-in mainland China domains (dnsmasq-china-list, including subdomains) go direct over both TCP and UDP; everything else is proxied. Add your own domains below.</string>
+    <string name="domain_rules_hint">Extra direct domains, one per line, e.g. baidu.com; lines starting with # are comments</string>
+    <string name="error_no_profile">Please add a profile first</string>
+    <string name="error_connect_failed">Connection failed</string>
+    <string name="error_tunnel_lost">pingtunnel connection lost. Check your network and reconnect.</string>
+    <string name="error_reconnect_failed">Reconnect failed after multiple attempts. Check your network or server.</string>
+    <string name="error_no_network">Network unavailable. Check your connection and retry.</string>
+    <string name="error_auth_failed">Server authentication failed (key/encrypt mismatch). Reconnect stopped.</string>
+    <string name="err_name_required">Please enter a profile name</string>
+    <string name="err_apps_required">Select at least one app for the \"selected apps only\" mode</string>
+    <string name="err_host_required">Please enter the server address</string>
+    <string name="err_key_range">Key must be a number between 0 and 2147483647</string>
+    <string name="err_encrypt_mode_unsupported">Invalid encryption mode; supported: aes128, aes256, chacha20</string>
+    <string name="err_encrypt_key_required">Encryption key is required when encryption is enabled</string>
+    <string name="err_tcp_maxwin_too_big">TCP max window is too large (limit 100000)</string>
+    <string name="err_tcp_params_range">Advanced parameter value out of range</string>
+    <string name="error_missing_native">libpingtunnel.so is missing. Run scripts/build_native.sh before packaging.</string>
+    <string name="error_pingtunnel_session">Cannot establish an SPP session (connection timeout). Check the server address, key/encrypt and network:\n%1$s</string>
+    <string name="error_pingtunnel_exited">The pingtunnel client exited early:\n%1$s</string>
+    <string name="log_no_output">no logs</string>
+
+    <!-- Common -->
+    <string name="action_back">Back</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_close">Close</string>
+    <string name="action_send">Send</string>
+    <string name="action_add">Add</string>
+    <string name="action_confirm">OK</string>
+
+    <!-- MainActivity toasts -->
+    <string name="toast_vpn_permission_denied">VPN permission denied, cannot connect</string>
+    <string name="toast_add_profile_first">Please add a profile first</string>
+    <string name="toast_invalid_qr">The QR code is not a valid pingtunnel profile</string>
+    <string name="toast_imported">Profile imported: %1$s</string>
+    <string name="toast_bad_link">The link is not a valid pingtunnel profile</string>
+    <string name="toast_exported">Exported %1$d profile(s)</string>
+    <string name="toast_export_failed">Export failed: %1$s</string>
+    <string name="toast_import_empty">No valid profiles found in the file</string>
+    <string name="toast_imported_count">Imported %1$d profile(s)</string>
+    <string name="toast_import_partial">Imported %1$d profile(s), skipped %2$d invalid profile(s)</string>
+    <string name="toast_import_failed">Import failed: %1$s</string>
+
+    <string name="scan_prompt">Point the pingtunnel profile QR code at the frame</string>
+
+    <!-- Main screen -->
+    <string name="menu_logs">Logs</string>
+    <string name="empty_profiles">No profiles yet. Use the button below to add one, or scan / import from a file.</string>
+    <string name="action_scan">Scan</string>
+    <string name="action_import">Import</string>
+    <string name="action_export">Export</string>
+    <string name="action_stats">Stats</string>
+    <string name="action_check">Check</string>
+    <string name="action_settings">Settings</string>
+    <string name="state_disconnected">Disconnected</string>
+    <string name="state_connecting">Connecting…</string>
+    <string name="state_connected">Connected</string>
+    <string name="state_disconnecting">Disconnecting…</string>
+    <string name="state_paused">Paused (trusted network)</string>
+    <string name="state_error">Error</string>
+    <string name="action_add_profile">Add profile</string>
+    <string name="empty_profiles_short">No profile selected</string>
+    <string name="sheet_choose_profile">Choose profile</string>
+    <string name="ping_untested">Not tested</string>
+    <string name="ping_ms">%1$d ms</string>
+    <string name="ping_testing">Testing…</string>
+    <string name="action_ping">Ping</string>
+    <string name="toast_ping_failed">Ping failed: unable to reach the server in time</string>
+    <string name="action_qr">QR</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="format_traffic">↑ %1$s    ↓ %2$s</string>
+
+    <!-- Stats screen -->
+    <string name="stats_title">Traffic stats</string>
+    <string name="stats_current_session">Current session</string>
+    <string name="stats_reconnecting">Reconnecting…</string>
+    <string name="stats_duration">Duration: %1$s</string>
+    <string name="stats_up_rate">↑ %1$s (%2$s)</string>
+    <string name="stats_down_rate">↓ %1$s (%2$s)</string>
+    <string name="stats_totals">Total traffic (all profiles)</string>
+    <string name="stats_total_line">↑ %1$s    ↓ %2$s    Total %3$s</string>
+    <string name="stats_per_profile">Per-profile stats</string>
+    <string name="action_reset_all">Clear all traffic counters</string>
+    <string name="stats_reset_all_title">Clear all traffic counters?</string>
+    <string name="stats_reset_all_msg">Cumulative upload/download counters of every profile will be reset. Profiles themselves are untouched. This cannot be undone.</string>
+    <string name="stats_reset_one_title">Clear this profile\'s counters?</string>
+    <string name="stats_reset_one_msg">This profile\'s cumulative upload/download counters will be reset. The profile itself is untouched.</string>
+    <string name="action_reset_short">Clear</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="setting_boot_title">Connect on boot</string>
+    <string name="setting_boot_subtitle">Automatically connect to the last used profile after reboot</string>
+    <string name="setting_reconnect_title">Auto reconnect</string>
+    <string name="setting_reconnect_subtitle">Reconnect with 1s/2s/4s… backoff (up to 5 times) on unexpected disconnect or WiFi/cellular switch</string>
+    <string name="setting_failover_title">Automatic failover</string>
+    <string name="setting_failover_subtitle">After repeated failures, automatically switch to the profile with the lowest latency</string>
+    <string name="setting_bypass_lan_title">Bypass LAN by default for new profiles</string>
+    <string name="setting_bypass_lan_subtitle">New profiles enable \"bypass private ranges\" smart split by default</string>
+    <string name="setting_trusted_title">Pause on trusted WiFi</string>
+    <string name="setting_trusted_subtitle">Pause the VPN on the Wi-Fi networks below and resume after leaving them. Connect once with the VPN on to activate monitoring.</string>
+    <string name="ssid_field_label">Wi-Fi name (SSID)</string>
+    <string name="trusted_empty">No trusted Wi-Fi yet</string>
+    <string name="action_add_current_wifi">Add the currently connected Wi-Fi</string>
+    <string name="toast_location_required">Location permission is required to read the current Wi-Fi name</string>
+    <string name="toast_wifi_unavailable">Cannot read the current Wi-Fi name (location permission required and Wi-Fi connected)</string>
+    <string name="toast_wifi_added">Added: %1$s</string>
+    <string name="trusted_chip_remove">✕ %1$s</string>
+    <string name="alwayson_title">System always-on VPN</string>
+    <string name="alwayson_state_on">Status: enabled (the system restarts this VPN after reboot)</string>
+    <string name="alwayson_state_off">Status: not enabled</string>
+    <string name="alwayson_steps">Android does not allow apps to enable always-on VPN themselves. Set it up manually:\n1. Tap the button below to open system VPN settings;\n2. Find \"PingTunnel\" and tap the gear icon next to it;\n3. Enable \"Always-on VPN\";\n4. For full leak protection, also enable \"Block connections without VPN\".\n\nYou can also drag the \"PingTunnel VPN\" Quick Settings tile to your preferred position for one-tap control.</string>
+    <string name="action_open_vpn_settings">Open system VPN settings</string>
+    <string name="toast_vpn_settings_unavailable">Cannot open system settings. Please open VPN settings manually.</string>
+
+    <!-- Profile editor -->
+    <string name="field_name">Profile name</string>
+    <string name="editor_add_title">Add profile</string>
+    <string name="editor_edit_title">Edit profile</string>
+    <string name="section_per_app">Per-app proxy</string>
+    <string name="per_app_all">All apps</string>
+    <string name="per_app_allowed">Selected only</string>
+    <string name="per_app_disallowed">Exclude selected</string>
+    <string name="action_choose_apps">Choose apps (%1$d)</string>
+    <string name="section_smart_split">Smart split</string>
+    <string name="split_bypass_lan_title">Bypass LAN</string>
+    <string name="split_bypass_lan_subtitle">Private ranges go direct, everything else is proxied (including IPv6 global unicast)</string>
+    <string name="split_bypass_cn_title">Direct for CN (chnroute)</string>
+    <string name="split_bypass_cn_subtitle">Mainland China IPs go direct; other addresses are proxied. Data from APNIC</string>
+    <string name="field_server_host">Server address (domain or IP)</string>
+    <string name="field_encrypt_mode">Encryption</string>
+    <string name="encrypt_mode_none">None (legacy numeric key)</string>
+    <string name="encrypt_mode_named">%1$s encryption</string>
+    <string name="field_encrypt_key">Encryption key</string>
+    <string name="field_key">Auth key</string>
+    <string name="field_key_hint">Numeric only, 0-2147483647, must match the server</string>
+    <string name="advanced_show">Advanced ▾</string>
+    <string name="advanced_hide">Advanced ▴</string>
+    <string name="field_timeout">Connection timeout (seconds)</string>
+    <string name="field_tcp_buffer">TCP buffer size (bytes)</string>
+    <string name="field_tcp_maxwin">TCP max window</string>
+    <string name="field_tcp_resend">TCP resend timeout (ms)</string>
+    <string name="field_tcp_compress">TCP compress threshold (bytes, 0=off)</string>
+    <string name="field_maxconn">Max connections (0=unlimited)</string>
+    <string name="field_congestion_title">Congestion control (bb)</string>
+    <string name="field_congestion_subtitle">Bandwidth-adaptive; prevents heavy traffic from killing the network</string>
+    <string name="field_ipv6_title">Capture IPv6 traffic</string>
+    <string name="field_ipv6_subtitle">When off, only IPv4 is proxied (IPv6 may go direct)</string>
+
+    <!-- App picker -->
+    <string name="app_picker_title">Choose apps (%1$d selected)</string>
+    <string name="app_picker_search">Search app name or package</string>
+
+    <!-- Logs -->
+    <string name="logs_empty">(no logs yet)</string>
+    <string name="logs_history_marker">…… (history truncated) ……</string>
+
+    <!-- QR share -->
+    <string name="qr_title">Share profile · %1$s</string>
+    <string name="qr_hint">Scan with another device to add it, or send the text on the right</string>
+    <string name="qr_too_large">Profile content is too long for a QR code. Please send it as text instead.</string>
+    <string name="qr_share_chooser">Share profile</string>
+    <string name="qr_content_description">QR code</string>
+
+    <!-- Active connections -->
+    <string name="action_connections">Sessions</string>
+    <string name="conn_title">Active connections</string>
+    <string name="conn_unknown_app">Unknown app (uid=%1$d)</string>
+    <string name="conn_count">%1$d connection(s)</string>
+    <string name="conn_count_closed">%1$d closed</string>
+    <string name="conn_active_count">%1$d active</string>
+    <string name="conn_direct_count">%1$d direct</string>
+    <string name="conn_direct">Direct</string>
+    <string name="conn_closed">Closed</string>
+    <string name="conn_totals">Active total: ↑ %1$s　↓ %2$s</string>
+    <string name="conn_since">%1$s · %2$s</string>
+    <string name="conn_pair">↑ %1$s　↓ %2$s</string>
+    <string name="conn_empty">No tunneled connections detected</string>
+    <string name="conn_proxy_label">Active proxy</string>
+    <string name="conn_proxy_none">No active profile</string>
+    <string name="conn_via_proxy">via %1$s</string>
+    <string name="conn_disconnected_hint">VPN is disconnected. Once connected, apps using the tunnel appear here live with their connections, speed and traffic.</string>
+
+    <!-- Connection history -->
+    <string name="action_history">History</string>
+    <string name="history_title">Connection history</string>
+    <string name="history_empty">No history yet. Every tunneled connection is logged here while the VPN is on.</string>
+    <string name="history_clear">Clear history</string>
+    <string name="history_clear_title">Clear connection history?</string>
+    <string name="history_clear_msg">All per-connection records will be cleared. Profiles and the current connection are not affected. This cannot be undone.</string>
+    <string name="history_delete_one">Delete this record</string>
+    <string name="history_route_proxy">Proxy</string>
+    <string name="history_route_unknown">Unknown</string>
+    <string name="history_result_success">Success</string>
+    <string name="history_result_failed">Failed</string>
+    <string name="history_result_unknown">Unknown</string>
+    <string name="history_connect_ms">connect %1$d ms</string>
+    <string name="history_detail_line">↑ %1$s　↓ %2$s　·　%3$s</string>
+    <string name="history_reason">Reason: %1$s</string>
+    <string name="history_filter_all">All</string>
+    <string name="history_filter_direct">Direct</string>
+    <string name="history_filter_empty">No records match the filter</string>
+    <string name="history_filter_reset">Reset filter</string>
+    <string name="history_count">%1$d total</string>
+    <string name="history_count_filtered">Filtered %1$d / %2$d</string>
+
+    <!-- IP lookup -->
+    <string name="action_ip_query">My IP</string>
+    <string name="ip_title">My IP</string>
+    <string name="ip_exit">VPN exit</string>
+    <string name="ip_direct">Direct connection</string>
+    <string name="ip_querying">Querying IP geolocation…</string>
+    <string name="ip_failed">Query failed. Check your network and try again.</string>
+    <string name="ip_retry">Retry</string>
+    <string name="ip_refresh">Refresh</string>
+    <string name="ip_not_connected_hint">VPN is off — only the direct exit IP is shown.</string>
+
+    <!-- Connection check -->
+    <string name="check_running_title">Checking…</string>
+    <string name="check_running_text">Comparing direct and tunnel exit IPs, and checking the remote DNS path</string>
+    <string name="check_ok_title">Check passed</string>
+    <string name="check_ok_text">Traffic exits through the pingtunnel server and domains are resolved remotely.</string>
+    <string name="check_same_title">Same exit IP</string>
+    <string name="check_same_text">The tunnel exit IP is the same as direct. Check split rules / server config.</string>
+    <string name="check_proxy_failed_title">Tunnel unusable</string>
+    <string name="check_proxy_failed_text">Direct works, but the tunnel cannot reach the internet. Check the logs.</string>
+    <string name="check_network_failed_title">Check failed</string>
+    <string name="check_network_failed_text">Direct access to the check service also failed. Check your network.</string>
+    <string name="check_direct_ip">Direct exit: %1$s</string>
+    <string name="check_proxy_ip">Tunnel exit: %1$s</string>
+    <string name="check_dns_ok">Remote DNS path: OK</string>
+    <string name="check_dns_bad">Remote DNS path: unavailable</string>
+    <string name="check_latency">Tunnel connect: %1$d ms</string>
+    <string name="value_dash">—</string>
+
+    <!-- Leak checks -->
+    <string name="leak_title">Leak checks</string>
+    <string name="leak_run">Run checks (IPv4 / IPv6 / DNS)</string>
+    <string name="leak_need_connection">Connect the VPN before running checks.</string>
+    <string name="leak_running">Checking through the tunnel…</string>
+    <string name="leak_ipv4_title">IPv4 exit</string>
+    <string name="leak_ipv6_title">IPv6</string>
+    <string name="leak_ipv6_direct">Direct IPv6: %1$s</string>
+    <string name="leak_ipv6_proxy">Tunnel IPv6: %1$s</string>
+    <string name="leak_ipv6_tunnel_ok">The tunnel has an IPv6 exit; confirm the system/browser do not leak direct IPv6</string>
+    <string name="leak_dns_title">DNS resolvers (probed through tunnel)</string>
+    <string name="leak_dns_ok">%1$d resolver(s) detected — DNS is resolved at the pingtunnel server, not your local ISP</string>
+    <string name="leak_dns_none">No resolvers detected. Retry or switch to a network that supports UDP</string>
+    <string name="leak_dns_failed">DNS test service unreachable. Try again later</string>
+    <string name="leak_webrtc_title">WebRTC</string>
+    <string name="leak_webrtc_text">This app itself is excluded from the VPN, so WebRTC in an in-app WebView bypasses the tunnel and results would be invalid. Open the sites below in a system browser (whose traffic goes through the VPN) and inspect STUN candidates:</string>
+    <string name="leak_webrtc_browserleaks">browserleaks.com/webrtc</string>
+    <string name="leak_webrtc_ipleak">ipleak.net</string>
+    <string name="action_leak">Leak</string>
+    <string name="privacy_policy_title">Privacy policy</string>
+    <string name="privacy_policy_subtitle">How this app handles data (GitHub Pages)</string>
+    <string name="privacy_policy_url">https://github.com/esrrhs/pingtunnel-client</string>
+</resources>
