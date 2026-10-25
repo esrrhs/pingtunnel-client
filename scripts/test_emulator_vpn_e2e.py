@@ -1236,10 +1236,27 @@ def start_in_emulator_pingtunnel_server(adb, serial, password=E2E_SERVER_PASSWOR
         raise RuntimeError(f"未知 ABI: {abi}")
     out_bin = os.path.join(repo_root, "scripts", "e2e", f"pingtunnel-server-{abi}")
     print(f"==> 构建模拟器内服务端 ({abi})")
+    # android/amd64 不支持 Go 内部链接，必须 CGO + NDK clang 外部链接
+    # （android/arm64 两者皆可）；CC 找不到时退回 CGO_ENABLED=0。
+    build_env = {**os.environ, "GOOS": "android", "GOARCH": goarch, "CGO_ENABLED": "0"}
+    ndk = os.environ.get("ANDROID_NDK_HOME", "")
+    clang_triple = {
+        "arm64-v8a": "aarch64-linux-android26-clang",
+        "armeabi-v7a": "armv7a-linux-androideabi26-clang",
+        "x86_64": "x86_64-linux-android26-clang",
+        "x86": "i686-linux-android26-clang",
+    }.get(abi)
+    if ndk and clang_triple:
+        host_tag = "linux-x86_64" if sys.platform.startswith("linux") else "darwin-x86_64"
+        for tag in (host_tag, "darwin-arm64"):
+            cc = os.path.join(ndk, "toolchains", "llvm", "prebuilt", tag, "bin", clang_triple)
+            if os.path.exists(cc):
+                build_env.update({"CGO_ENABLED": "1", "CC": cc})
+                break
     subprocess.run(
         ["go", "build", "-overlay", overlay_file, "-trimpath", "-o", out_bin, "."],
         cwd=os.path.join(src_dir, "cmd"),
-        env={**os.environ, "GOOS": "android", "GOARCH": goarch, "CGO_ENABLED": "0"},
+        env=build_env,
         check=True,
     )
     run_adb(adb, serial, ["push", out_bin, "/data/local/tmp/pingtunnel-server"])
