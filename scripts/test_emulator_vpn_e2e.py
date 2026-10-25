@@ -1261,7 +1261,7 @@ def start_in_emulator_pingtunnel_server(adb, serial, password=E2E_SERVER_PASSWOR
     )
     run_adb(adb, serial, ["push", out_bin, "/data/local/tmp/pingtunnel-server"])
     run_adb(adb, serial, ["shell", "chmod", "755", "/data/local/tmp/pingtunnel-server"])
-    run_adb(adb, serial, ["shell", "pkill", "-f", "pingtunnel-server -type server"], check=False)
+    run_adb(adb, serial, ["shell", "pkill -f '[p]ingtunnel-server -type'"], check=False)
     time.sleep(1)
     run_adb(
         adb, serial,
@@ -1269,8 +1269,8 @@ def start_in_emulator_pingtunnel_server(adb, serial, password=E2E_SERVER_PASSWOR
                   " >/data/local/tmp/pt-server.log 2>&1 &"],
         check=False,
     )
-    time.sleep(2)
-    out = run_adb(adb, serial, ["shell", "pgrep", "-f", "pingtunnel-server -type server"], check=False).stdout.strip()
+    time.sleep(3)
+    out = run_adb(adb, serial, ["shell", "pgrep -f '[p]ingtunnel-server -type'"], check=False).stdout.strip()
     if not out:
         srv_log = run_adb(adb, serial, ["shell", "cat", "/data/local/tmp/pt-server.log"], check=False).stdout
         raise RuntimeError(f"模拟器内 pingtunnel 服务端启动失败（adb root 是否生效？）日志：\n{srv_log}")
@@ -1725,7 +1725,7 @@ def main():
         ws_server.stop()
         grpc_server.stop()
         quic_server.stop()
-        run_adb(adb, serial, ["shell", "pkill", "-f", "pingtunnel -type server"], check=False)
+        run_adb(adb, serial, ["shell", "pkill -f '[p]ingtunnel -type'"], check=False)
 
 if __name__ == "__main__":
     main()
