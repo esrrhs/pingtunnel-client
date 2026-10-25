@@ -1207,6 +1207,13 @@ def start_in_emulator_pingtunnel_server(adb, serial, password=E2E_SERVER_PASSWOR
     3. 常驻用 setsid：模拟器上 nohup 后台进程会随 adb shell 会话退出被杀。
     """
     abi = run_adb(adb, serial, ["shell", "getprop", "ro.product.cpu_abi"]).stdout.strip()
+    if not abi:
+        # 部分镜像上该属性为空（CI 的 API34 google_apis 实测）：退到 abilist 首项，再退到 uname -m
+        abilist = run_adb(adb, serial, ["shell", "getprop", "ro.product.cpu.abilist"], check=False).stdout.strip()
+        abi = abilist.split(",")[0].strip() if abilist else ""
+    if not abi:
+        machine = run_adb(adb, serial, ["shell", "uname", "-m"], check=False).stdout.strip()
+        abi = {"x86_64": "x86_64", "aarch64": "arm64-v8a", "i686": "x86", "armv8l": "armeabi-v7a"}.get(machine, "")
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     src_dir = os.path.join(repo_root, "third_party", "pingtunnel")
     if not os.path.isdir(os.path.join(src_dir, ".git")):
