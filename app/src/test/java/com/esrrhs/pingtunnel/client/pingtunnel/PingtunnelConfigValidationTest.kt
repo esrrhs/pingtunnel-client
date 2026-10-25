@@ -8,50 +8,42 @@ class PingtunnelConfigValidationTest {
 
     private fun base(
         host: String = "example.com",
-        key: Long = 123456L,
-        encryptMode: String = "",
-        encryptKey: String = "",
+        password: String = "secret-pass",
+        cipher: String = PingtunnelConfig.CIPHER_DEFAULT,
     ) = PingtunnelConfig(
         serverHost = host,
-        key = key,
-        encryptMode = encryptMode,
-        encryptKey = encryptKey,
+        password = password,
+        cipher = cipher,
     )
 
     @Test
-    fun legacyKeyBoundaries_areAccepted() {
-        // -key 为 Go int32：0..2147483647 均合法
-        assertNull(base(key = 0L).validate())
-        assertNull(base(key = PingtunnelConfig.MAX_KEY).validate())
+    fun validPasswordAtBoundary_isAccepted() {
+        assertNull(base(password = "a".repeat(PingtunnelConfig.MIN_PASSWORD_LEN)).validate())
     }
 
     @Test
-    fun legacyKeyOutOfRange_isRejected() {
-        assertEquals(ValidationError.KEY_RANGE, base(key = -1L).validate())
-        assertEquals(ValidationError.KEY_RANGE, base(key = PingtunnelConfig.MAX_KEY + 1).validate())
+    fun passwordBelowMinLength_isRejected() {
+        assertEquals(
+            ValidationError.PASSWORD_TOO_SHORT,
+            base(password = "a".repeat(PingtunnelConfig.MIN_PASSWORD_LEN - 1)).validate(),
+        )
     }
 
     @Test
-    fun unknownEncryptModeRejected() {
+    fun blankPasswordRejected_evenAtMinLengthBoundary() {
+        assertEquals(ValidationError.PASSWORD_REQUIRED, base(password = "").validate())
+    }
+
+    @Test
+    fun unknownCipherRejected() {
         // 外部导入（扫码/文件）可携带任意字符串，白名单外不应拼给 pingtunnel 子进程
-        assertEquals(
-            ValidationError.ENCRYPT_MODE_UNSUPPORTED,
-            base(encryptMode = "rot13").validate(),
-        )
+        assertEquals(ValidationError.CIPHER_UNSUPPORTED, base(cipher = "rot13").validate())
     }
 
     @Test
-    fun encryptKeyRequiredWhenModeSet() {
-        assertEquals(
-            ValidationError.ENCRYPT_KEY_REQUIRED,
-            base(encryptMode = "aes256", encryptKey = "").validate(),
-        )
-    }
-
-    @Test
-    fun encryptKeyBlankIgnoredWhenModeNone() {
-        // 不加密时 encryptKey 无意义，不应报错
-        assertNull(base(encryptMode = "", encryptKey = "").validate())
+    fun cipherOverrides_areAccepted() {
+        assertNull(base(cipher = "aes256").validate())
+        assertNull(base(cipher = "aes128").validate())
     }
 
     @Test
@@ -79,7 +71,7 @@ class PingtunnelConfigValidationTest {
 
     @Test
     fun hostCheckedFirstEvenWhenOtherFieldsAlsoBad() {
-        val both = PingtunnelConfig(serverHost = "", key = -1L)
+        val both = PingtunnelConfig(serverHost = "", password = "")
         assertEquals(ValidationError.HOST_REQUIRED, both.validate())
     }
 }

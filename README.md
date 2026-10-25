@@ -40,7 +40,7 @@ ICMP echo 包，无需 root。
 - 快速设置磁贴、开机自启、始终开启 VPN 引导
 - 实时速率通知栏、会话/累计流量统计、当前连接与单连接历史
 - 内核日志查看、隧道自检、IP/DNS 泄漏检测、出口 IP 归属地查询
-- 认证：旧式数字 key（`-key`）或 AEAD 加密（`-encrypt`：aes128 / aes256 / chacha20）
+- 认证与加密：v3 单一密码（认证码 PBKDF2 派生，ChaCha20-Poly1305 默认全程加密，可覆盖为 AES-256/128）
 
 ## 构建
 
@@ -72,15 +72,15 @@ bash scripts/build_native.sh
 
 ## 服务端
 
-在服务器上运行 [pingtunnel](https://github.com/esrrhs/pingtunnel) server，
-客户端配置里填该服务器地址与相同密码：
+在服务器上运行 [pingtunnel](https://github.com/esrrhs/pingtunnel) **v3** server，
+客户端配置里填该服务器地址与相同密码（v3 起密码必填、最少 8 字符，
+认证与加密一体，流量始终加密；旧版 v2 数字 key 协议不互通）：
 
 ```bash
-# 旧式数字 key（App 里「不加密」模式）
-sudo ./pingtunnel -type server -key 123456
+sudo ./pingtunnel -type server -password your-passphrase
 
-# 或 AEAD 加密（App 里选择对应加密模式 + 相同密钥）
-sudo ./pingtunnel -type server -encrypt aes256 -encrypt-key your-passphrase
+# 或指定加密算法（默认 ChaCha20-Poly1305）
+sudo ./pingtunnel -type server -password your-passphrase -encrypt aes256
 ```
 
 ## pingtunnel 参数映射
@@ -90,8 +90,8 @@ App 配置项与 pingtunnel client 命令行参数一一对应：
 | App 字段 | CLI 参数 | 默认 |
 | --- | --- | --- |
 | 服务器地址 | `-s` | 必填 |
-| 认证 Key（不加密时） | `-key` | 0 |
-| 加密模式 / 加密密钥 | `-encrypt` / `-encrypt-key` | 不加密 |
+| 密码（认证+加密一体） | `-password` | 必填（≥8 字符） |
+| 加密算法 | `-encrypt` | ChaCha20（可换 AES-256/128） |
 | 连接超时 | `-timeout` | 60 秒 |
 | TCP 收发缓冲区 | `-tcp_bs` | 1MB |
 | TCP 最大窗口 | `-tcp_mw` | 20000（上限 100000） |
@@ -100,7 +100,7 @@ App 配置项与 pingtunnel client 命令行参数一一对应：
 | 最大连接数 | `-maxconn` | 0（不限） |
 | 拥塞控制 | `-congestion` | bb（可关） |
 
-本地固定参数：`-type client -sock5 1 -l 127.0.0.1:<随机端口> -nolog 1`。
+本地固定参数：`-type client -socks5 -l 127.0.0.1:<随机端口> -nolog 1`（v3 中 `-sock5 1` 改为布尔 `-socks5`）。
 
 ## 与桌面版的关系
 

@@ -8,7 +8,7 @@ class ProfileTest {
 
     private fun validConfig() = PingtunnelConfig(
         serverHost = "example.com",
-        key = 123456L,
+        password = "secret-pass",
     )
 
     @Test
@@ -25,8 +25,8 @@ class ProfileTest {
 
     @Test
     fun invalidConfig_surfacesConfigError() {
-        val profile = Profile(name = "home", config = validConfig().copy(key = -1L))
-        assertEquals(ValidationError.KEY_RANGE, profile.validate())
+        val profile = Profile(name = "home", config = validConfig().copy(password = "short"))
+        assertEquals(ValidationError.PASSWORD_TOO_SHORT, profile.validate())
     }
 
     @Test

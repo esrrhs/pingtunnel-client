@@ -194,7 +194,6 @@ fun ConnectionFields(
     config: PingtunnelConfig,
     onChange: (PingtunnelConfig) -> Unit,
 ) {
-    var encryptExpanded by remember { mutableStateOf(false) }
     var advancedShown by remember { mutableStateOf(false) }
 
     OutlinedTextField(
@@ -205,69 +204,63 @@ fun ConnectionFields(
         modifier = Modifier.fillMaxWidth(),
     )
 
-    // 加密模式：空 = 旧式纯数字 key 弱鉴权；否则 AEAD 加密 + 密钥
+    // v3：单一密码负责认证与加密（最少 8 字符），算法默认 ChaCha20-Poly1305
+    OutlinedTextField(
+        value = config.password,
+        onValueChange = { onChange(config.copy(password = it)) },
+        label = { Text(stringResource(R.string.field_password)) },
+        supportingText = { Text(stringResource(R.string.field_password_hint)) },
+        singleLine = true,
+        visualTransformation = PasswordVisualTransformation(),
+        modifier = Modifier.fillMaxWidth(),
+    )
+
+    // 加密算法覆盖：默认 ChaCha20-Poly1305，可换 AES；流量始终加密
+    var cipherExpanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(
-        expanded = encryptExpanded,
-        onExpandedChange = { encryptExpanded = it },
+        expanded = cipherExpanded,
+        onExpandedChange = { cipherExpanded = it },
     ) {
         OutlinedTextField(
             value = stringResource(
-                if (config.encrypted) R.string.encrypt_mode_named else R.string.encrypt_mode_none,
-                config.encryptMode,
+                when (config.cipher) {
+                    "aes256" -> R.string.cipher_aes256
+                    "aes128" -> R.string.cipher_aes128
+                    else -> R.string.cipher_default
+                },
             ),
             onValueChange = {},
             readOnly = true,
-            label = { Text(stringResource(R.string.field_encrypt_mode)) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = encryptExpanded) },
+            label = { Text(stringResource(R.string.field_cipher)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cipherExpanded) },
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth(),
         )
         ExposedDropdownMenu(
-            expanded = encryptExpanded,
-            onDismissRequest = { encryptExpanded = false },
+            expanded = cipherExpanded,
+            onDismissRequest = { cipherExpanded = false },
         ) {
-            PingtunnelConfig.ENCRYPT_MODES.forEach { mode ->
+            PingtunnelConfig.CIPHERS.forEach { cipher ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             stringResource(
-                                if (mode.isEmpty()) R.string.encrypt_mode_none else R.string.encrypt_mode_named,
-                                mode,
+                                when (cipher) {
+                                    "aes256" -> R.string.cipher_aes256
+                                    "aes128" -> R.string.cipher_aes128
+                                    else -> R.string.cipher_default
+                                },
                             ),
                         )
                     },
                     onClick = {
-                        onChange(config.copy(encryptMode = mode))
-                        encryptExpanded = false
+                        onChange(config.copy(cipher = cipher))
+                        cipherExpanded = false
                     },
                 )
             }
         }
-    }
-
-    if (config.encrypted) {
-        OutlinedTextField(
-            value = config.encryptKey,
-            onValueChange = { onChange(config.copy(encryptKey = it)) },
-            label = { Text(stringResource(R.string.field_encrypt_key)) },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-        )
-    } else {
-        OutlinedTextField(
-            value = if (config.key > 0) config.key.toString() else "",
-            onValueChange = { text ->
-                onChange(config.copy(key = text.toLongOrNull() ?: 0))
-            },
-            label = { Text(stringResource(R.string.field_key)) },
-            supportingText = { Text(stringResource(R.string.field_key_hint)) },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 
     TextButton(onClick = { advancedShown = !advancedShown }) {

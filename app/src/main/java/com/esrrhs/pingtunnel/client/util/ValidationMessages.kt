@@ -12,9 +12,9 @@ object ValidationMessages {
             ValidationError.NAME_REQUIRED -> R.string.err_name_required
             ValidationError.APPS_REQUIRED -> R.string.err_apps_required
             ValidationError.HOST_REQUIRED -> R.string.err_host_required
-            ValidationError.KEY_RANGE -> R.string.err_key_range
-            ValidationError.ENCRYPT_MODE_UNSUPPORTED -> R.string.err_encrypt_mode_unsupported
-            ValidationError.ENCRYPT_KEY_REQUIRED -> R.string.err_encrypt_key_required
+            ValidationError.PASSWORD_REQUIRED -> R.string.err_password_required
+            ValidationError.PASSWORD_TOO_SHORT -> R.string.err_password_too_short
+            ValidationError.CIPHER_UNSUPPORTED -> R.string.err_cipher_unsupported
             ValidationError.TCP_MAXWIN_TOO_BIG -> R.string.err_tcp_maxwin_too_big
             ValidationError.TCP_PARAMS_RANGE -> R.string.err_tcp_params_range
         },

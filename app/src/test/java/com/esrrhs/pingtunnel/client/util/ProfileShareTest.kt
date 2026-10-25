@@ -14,9 +14,8 @@ class ProfileShareTest {
         name = "home",
         config = PingtunnelConfig(
             serverHost = "example.com",
-            key = 123456L,
-            encryptMode = "aes256",
-            encryptKey = "passphrase",
+            password = "secret-pass",
+            cipher = "aes256",
             enableIpv6 = false,
         ),
         perAppMode = PerAppMode.DISALLOWED,

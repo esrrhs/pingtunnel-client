@@ -1180,8 +1180,8 @@ def run_probe(adb, serial, shell_cmd, timeout=12):
 
 CORE_CHILD_PATTERN = "libpingtunnel.so"
 
-# pingtunnel 服务端（跑在模拟器内部）使用的认证 key，须为 int
-E2E_SERVER_KEY = "123456"
+# pingtunnel 服务端（跑在模拟器内部）使用的共享密码；v3 要求最少 8 个字符
+E2E_SERVER_PASSWORD = "e2e-test-pass"
 
 
 def get_guest_ip(adb, serial):
@@ -1193,7 +1193,7 @@ def get_guest_ip(adb, serial):
     return m.group(1)
 
 
-def start_in_emulator_pingtunnel_server(adb, serial, key=E2E_SERVER_KEY):
+def start_in_emulator_pingtunnel_server(adb, serial, password=E2E_SERVER_PASSWORD):
     """把 pingtunnel server 构建并推进模拟器，以 root 常驻运行。
 
     两个关键点（实测 Android 15 模拟器）：
@@ -1241,7 +1241,7 @@ def start_in_emulator_pingtunnel_server(adb, serial, key=E2E_SERVER_KEY):
     time.sleep(1)
     run_adb(
         adb, serial,
-        ["shell", f"setsid /data/local/tmp/pingtunnel-server -type server -key {key} -nolog 1"
+        ["shell", f"setsid /data/local/tmp/pingtunnel-server -type server -password {password} -nolog 1"
                   " >/data/local/tmp/pt-server.log 2>&1 &"],
         check=False,
     )
@@ -1250,7 +1250,7 @@ def start_in_emulator_pingtunnel_server(adb, serial, key=E2E_SERVER_KEY):
     if not out:
         srv_log = run_adb(adb, serial, ["shell", "cat", "/data/local/tmp/pt-server.log"], check=False).stdout
         raise RuntimeError(f"模拟器内 pingtunnel 服务端启动失败（adb root 是否生效？）日志：\n{srv_log}")
-    print(f"==> 模拟器内 pingtunnel 服务端已启动 (key={key}, pid={out.splitlines()[0]})")
+    print(f"==> 模拟器内 pingtunnel 服务端已启动 (password=***, pid={out.splitlines()[0]})")
 
 
 def core_child_pids(adb, serial):
@@ -1604,7 +1604,7 @@ def main():
     # 且 QEMU slirp 对自定义 ICMP 载荷的转发不可靠；走模拟器内部回环最真实稳定。
     guest_ip = get_guest_ip(adb, serial)
     print(f"==> 模拟器 eth0 IP: {guest_ip}")
-    start_in_emulator_pingtunnel_server(adb, serial, key=E2E_SERVER_KEY)
+    start_in_emulator_pingtunnel_server(adb, serial, password=E2E_SERVER_PASSWORD)
 
     try:
         # ==========================================================
@@ -1626,7 +1626,7 @@ def main():
             "bypassCn": False,
             "config": {
                 "serverHost": guest_ip,
-                "key": int(E2E_SERVER_KEY),
+                "password": E2E_SERVER_PASSWORD,
                 "enableIpv6": False
             }
         }
