@@ -1665,15 +1665,17 @@ def main():
             raise RuntimeError("tun0 网卡未能按时建立！")
         print("==> tun0 虚拟网卡已就绪")
 
-        # 检查 libpingtunnel.so 进程
-        pids = core_child_pids(adb, serial)
-        print(f"==> libpingtunnel.so 子进程 PID: {'/'.join(pids) or '(无)'}")
-        if not pids:
+        # 等待 libpingtunnel.so 进程：App 先建 TUN 再拉内核子进程（见
+        # PingtunnelVpnService.establishSession 顺序），tun0 就绪时子进程可能还没起
+        first_pid = wait_for_core_child(adb, serial, timeout=25)
+        print(f"==> libpingtunnel.so 子进程 PID: {first_pid or '(无)'}")
+        if not first_pid:
+            dump_vpn_log(adb, serial)
             raise RuntimeError("libpingtunnel.so 进程未运行！")
         # native 子进程一退出，后面所有探测都会变成"没有代理"，与协议无关。
         # 每次探测前确认它还活着，死则立刻报明确原因（而不是让重试伪装成协议回归）。
         # PID 用盒子装：网络切换重建后 PID 会变，回写以免后续每次都刷"PID 已变"。
-        core_pid_box = [pids[0]]
+        core_pid_box = [first_pid]
 
         def core_liveness():
             core_pid_box[0] = assert_core_child_alive(
