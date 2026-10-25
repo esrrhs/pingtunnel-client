@@ -1315,11 +1315,13 @@ def direct_kernel_icmp_check(adb, serial, guest_ip, password=E2E_SERVER_PASSWORD
     if not bin_path:
         raise RuntimeError(f"找不到可执行内核，候选：{candidates}")
     run_adb(adb, serial, ["shell", f"run-as {pkg} sh -c 'cd files && rm -f direct.log'"], check=False)
+    # < /dev/null：后台进程不能攥住 adb 的 stdin 管道，否则 adb shell 不返回；
+    # 即便仍偶发挂住，check=False + 短超时让它不致命，后续轮询读 direct.log 判定
     run_adb(adb, serial, [
         "shell",
         f"run-as {pkg} sh -c 'cd files && setsid {bin_path} -type client -l 127.0.0.1:10800"
-        f" -s {guest_ip} -socks5 -password {password} -nolog 1 > direct.log 2>&1 &'",
-    ], check=False)
+        f" -s {guest_ip} -socks5 -password {password} -nolog 1 > direct.log 2>&1 < /dev/null &'",
+    ], check=False, timeout=15)
     deadline = time.time() + 25
     pongs = 0
     while time.time() < deadline and pongs < 3:
