@@ -1,7 +1,6 @@
 package com.esrrhs.pingtunnel.client.pingtunnel
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -10,7 +9,7 @@ class PingtunnelConfigTest {
 
     private fun validConfig() = PingtunnelConfig(
         serverHost = "example.com",
-        key = 123456L,
+        password = "secret-pass",
     )
 
     @Test
@@ -30,30 +29,29 @@ class PingtunnelConfigTest {
     }
 
     @Test
-    fun zeroKey_isValid() {
-        // pingtunnel 默认 key=0（不设密码），应视为合法
-        assertNull(validConfig().copy(key = 0L).validate())
+    fun blankPassword_isRejected() {
+        // v3 起密码必填：认证与加密一体
+        assertEquals(ValidationError.PASSWORD_REQUIRED, validConfig().copy(password = "").validate())
     }
 
     @Test
-    fun encrypted_usesEncryptKeyInsteadOfLegacyKey() {
-        val config = validConfig().copy(
-            encryptMode = "aes256",
-            encryptKey = "passphrase",
+    fun shortPassword_isRejected() {
+        assertEquals(
+            ValidationError.PASSWORD_TOO_SHORT,
+            validConfig().copy(password = "1234567").validate(),
         )
-        assertTrue(config.encrypted)
-        assertNull(config.validate())
     }
 
     @Test
-    fun notEncrypted_whenModeBlank() {
-        assertFalse(validConfig().encrypted)
+    fun passwordAtMinLength_isValid() {
+        assertNull(validConfig().copy(password = "12345678").validate())
     }
 
     @Test
     fun defaults_areExpected() {
         val config = PingtunnelConfig()
-        assertEquals(0L, config.key)
+        assertEquals("", config.password)
+        assertEquals("", config.cipher)
         assertEquals(60, config.timeout)
         assertEquals(1 * 1024 * 1024, config.tcpBufferSize)
         assertEquals(20_000, config.tcpMaxWin)
@@ -70,10 +68,10 @@ class PingtunnelConfigTest {
     }
 
     @Test
-    fun encryptModes_containAesAndChacha() {
-        assertTrue(PingtunnelConfig.ENCRYPT_MODES.contains(""))
-        assertTrue(PingtunnelConfig.ENCRYPT_MODES.contains("aes128"))
-        assertTrue(PingtunnelConfig.ENCRYPT_MODES.contains("aes256"))
-        assertTrue(PingtunnelConfig.ENCRYPT_MODES.contains("chacha20"))
+    fun ciphers_containAesOverridesOnly() {
+        // v3：流量始终加密，"" 为默认 ChaCha20，AES 仅作算法覆盖
+        assertTrue(PingtunnelConfig.CIPHERS.contains(""))
+        assertTrue(PingtunnelConfig.CIPHERS.contains("aes256"))
+        assertTrue(PingtunnelConfig.CIPHERS.contains("aes128"))
     }
 }

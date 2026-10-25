@@ -13,11 +13,11 @@ import java.util.concurrent.TimeUnit
 open class PingtunnelException(message: String) : Exception(message)
 
 /**
- * pingtunnel 会话认证失败（key/encrypt 与服务器不匹配）。
+ * pingtunnel 会话认证失败（password 与服务器不匹配）。
  *
- * 保留异常类型以对齐上层故障切换逻辑；注意 pingtunnel 的鉴权是弱鉴权
- * （Magic+Key 不匹配时服务端静默丢包），目前没有确定性的日志标记，
- * 主要依赖上层 SocksProbe 端到端探测失败来触发重连/轮换。
+ * 保留异常类型以对齐上层故障切换逻辑；注意 pingtunnel 服务端对认证码
+ * 不匹配的包静默丢包，目前没有确定性的日志标记，主要依赖上层
+ * SocksProbe 端到端探测失败来触发重连/轮换。
  */
 class PingtunnelAuthException(message: String) : PingtunnelException(message)
 
@@ -68,14 +68,12 @@ class PingtunnelProcess(context: Context) {
             add("-type"); add("client")
             add("-l"); add("127.0.0.1:$port")
             add("-s"); add(config.serverHost)
-            // SOCKS5 模式隐含 tcp 可靠传输（FrameMgr 帧 + 重传），无需 -t 目标
-            add("-sock5"); add("1")
-            // 加密与旧式纯数字 key 二选一
-            if (config.encrypted) {
-                add("-encrypt"); add(config.encryptMode)
-                add("-encrypt-key"); add(config.encryptKey)
-            } else {
-                add("-key"); add(config.key.toString())
+            // SOCKS5 模式（v3 为布尔开关）隐含 tcp 可靠传输，无需 -t 目标
+            add("-socks5")
+            // v3：单一密码负责认证与加密，流量始终加密（默认 ChaCha20-Poly1305）
+            add("-password"); add(config.password)
+            if (config.cipher != PingtunnelConfig.CIPHER_DEFAULT) {
+                add("-encrypt"); add(config.cipher)
             }
             add("-timeout"); add(config.timeout.toString())
             add("-tcp_bs"); add(config.tcpBufferSize.toString())
@@ -109,8 +107,7 @@ class PingtunnelProcess(context: Context) {
             runCatching {
                 proc.inputStream.bufferedReader().forEachLine { raw ->
                     // pingtunnel 的 stdout 带 ANSI 颜色码，剥除后再回放/落盘
-                    var line = LogSanitizer.stripAnsi(raw)
-                    line = maskKey(line)
+                    val line = LogSanitizer.stripAnsi(raw)
                     synchronized(outputLines) {
                         outputLines.addLast(line)
                         while (outputLines.size > MAX_OUTPUT_LINES) outputLines.removeFirst()
@@ -184,17 +181,6 @@ class PingtunnelProcess(context: Context) {
     private fun findFreeLoopbackPort(): Int =
         ServerSocket(0, 1, InetAddress.getByName(LOOPBACK_V4)).use { it.localPort }
 
-    /**
-     * pingtunnel 启动时会打印明文 key（loggo.Info("key %d")），
-     * 日志会被采集落盘/展示，这里把数值掩掉防止泄露。
-     */
-    private fun maskKey(line: String): String =
-        if (KEY_LOG_REGEX.containsMatchIn(line)) {
-            KEY_LOG_REGEX.replace(line, "key ***")
-        } else {
-            line
-        }
-
     /** 追加到 pingtunnel.log；由 ConnectionRecorder 定期截断，避免长时间运行占满存储。 */
     private fun appendToLogFile(line: String) {
         runCatching {
@@ -207,9 +193,6 @@ class PingtunnelProcess(context: Context) {
         const val MAX_OUTPUT_LINES = 50
         const val LOG_FILE = "pingtunnel.log"
         const val TAG = "PingtunnelProcess"
-
-        /** 形如「key 123456」的启动日志行（掩码数值）。 */
-        val KEY_LOG_REGEX = Regex("""\bkey \d+""")
 
         /**
          * pingtunnel 服务端对 key/magic 不匹配的包静默丢弃，没有确定性的认证错误
