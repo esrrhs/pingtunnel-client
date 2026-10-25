@@ -1304,10 +1304,16 @@ def direct_kernel_icmp_check(adb, serial, guest_ip, password=E2E_SERVER_PASSWORD
     abi = detect_abi(adb, serial)
     base = run_adb(adb, serial, ["shell", "pm", "path", pkg]).stdout.strip().splitlines()[0]
     base = base.removeprefix("package:").strip()
-    bin_path = os.path.join(os.path.dirname(os.path.dirname(base)), "lib", abi, "libpingtunnel.so")
-    ok = run_adb(adb, serial, ["shell", f"test -x '{bin_path}' && echo ok"], check=False).stdout.strip()
-    if ok != "ok":
-        raise RuntimeError(f"找不到可执行内核：{bin_path}")
+    # lib 目录两种布局都可能出现：base.apk 同级 / 上级（多 ABI 时在各 <abi> 子目录）
+    candidates = [
+        os.path.join(os.path.dirname(base), "lib", abi, "libpingtunnel.so"),
+        os.path.join(os.path.dirname(os.path.dirname(base)), "lib", abi, "libpingtunnel.so"),
+    ]
+    bin_path = next((c for c in candidates
+                     if run_adb(adb, serial, ["shell", f"test -x '{c}' && echo ok"],
+                                check=False).stdout.strip() == "ok"), None)
+    if not bin_path:
+        raise RuntimeError(f"找不到可执行内核，候选：{candidates}")
     run_adb(adb, serial, ["shell", f"run-as {pkg} sh -c 'cd files && rm -f direct.log'"], check=False)
     run_adb(adb, serial, [
         "shell",
