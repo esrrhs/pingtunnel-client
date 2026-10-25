@@ -1184,13 +1184,22 @@ CORE_CHILD_PATTERN = "libpingtunnel.so"
 E2E_SERVER_PASSWORD = "e2e-test-pass"
 
 
-def get_guest_ip(adb, serial):
-    """取模拟器 eth0 的 IPv4（标准镜像为 10.0.2.15），App 的 ICMP 隧道直连它。"""
-    out = run_adb(adb, serial, ["shell", "ip", "-f", "inet", "-o", "addr", "show", "eth0"], check=False).stdout
-    m = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", out)
-    if not m:
-        raise RuntimeError(f"无法获取模拟器 eth0 IP：{out!r}")
-    return m.group(1)
+def get_guest_ip(adb, serial, timeout=20):
+    """取模拟器 eth0 的 IPv4（标准镜像为 10.0.2.15），App 的 ICMP 隧道直连它。
+
+    eth0 配置完成有先有后（CI 偶发启动竞态），带重试；始终拿不到时
+    退回 AOSP 用户态网络的固定地址 10.0.2.15。
+    """
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        out = run_adb(adb, serial, ["shell", "ip", "-f", "inet", "-o", "addr", "show", "eth0"],
+                      check=False).stdout
+        m = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", out)
+        if m:
+            return m.group(1)
+        time.sleep(1)
+    print("    [WARN] eth0 未在时限内取到 IPv4，回退默认 10.0.2.15")
+    return "10.0.2.15"
 
 
 def start_in_emulator_pingtunnel_server(adb, serial, password=E2E_SERVER_PASSWORD):
