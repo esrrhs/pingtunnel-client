@@ -1,119 +1,154 @@
 # pingtunnel-client (Android)
 
-pingtunnel 的 Android 客户端：把 TCP/UDP 流量封装进 ICMP echo（ping）包穿透传输，
-**免 root** 即可使用——普通 App 权限直接收发自定义 ICMP 协议包。
+<p align="center">
+  <a href="https://github.com/esrrhs/pingtunnel-client/actions/workflows/unit-test.yml">
+    <img src="https://github.com/esrrhs/pingtunnel-client/actions/workflows/unit-test.yml/badge.svg" alt="Unit & E2E Tests">
+  </a>
+  <a href="https://github.com/esrrhs/pingtunnel-client/actions/workflows/emulator-test.yml">
+    <img src="https://github.com/esrrhs/pingtunnel-client/actions/workflows/emulator-test.yml/badge.svg" alt="Emulator VPN E2E Tests">
+  </a>
+  <a href="https://github.com/esrrhs/pingtunnel-client/releases">
+    <img src="https://img.shields.io/github/v/release/esrrhs/pingtunnel-client?include_prereleases&style=flat-square" alt="Latest Release">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License: Apache 2.0">
+  </a>
+  <img src="https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%2B)-brightgreen?style=flat-square&logo=android" alt="Platform: Android 8.0+">
+  <img src="https://img.shields.io/badge/Pingtunnel%20Core-v3.1-orange?style=flat-square" alt="Pingtunnel Core: v3.1">
+  <img src="https://img.shields.io/badge/Arch-arm64--v8a%20%7C%20x86__64-informational?style=flat-square" alt="Architectures: arm64-v8a | x86_64">
+  <a href="https://github.com/esrrhs/pingtunnel-client/stargazers">
+    <img src="https://img.shields.io/github/stars/esrrhs/pingtunnel-client?style=flat-square&logo=github" alt="GitHub Stars">
+  </a>
+</p>
+
+An official Android client for **[pingtunnel](https://github.com/esrrhs/pingtunnel)** that encapsulates TCP and UDP traffic inside standard ICMP echo (ping) packets to break through restrictive firewalls and ISP throttles.
+
+**Root-free**: Standard Android application permissions are sufficient to send and receive custom ICMP packets.
 
 ```
-App / 其它应用
+App / System Traffic
    │
    ▼
-VpnService (TUN 虚拟网卡, 全量抓包)
+VpnService (TUN virtual network device, full packet capture)
    │
    ▼
 hev-socks5-tunnel (JNI, tun2socks)
    │
-   ▼ (可选) RuleSocksServer 用户态分流器 —— 绕过局域网 / CN 直连 / 域名直连
+   ▼ (Optional) RuleSocksServer router — Bypass LAN / CN Direct IPs / Direct Domains
    │
    ▼
-pingtunnel 内核子进程 (libpingtunnel.so, 本地 SOCKS5: CONNECT + UDP ASSOCIATE)
+pingtunnel daemon (libpingtunnel.so, local SOCKS5: CONNECT + UDP ASSOCIATE)
    │
    ▼
-ICMP echo（免 root ping socket）──▶ pingtunnel server ──▶ 互联网
+ICMP echo (Rootless ICMP datagram socket) ──▶ pingtunnel server ──▶ Destination / Internet
 ```
 
-## 免 root 原理
+---
 
-Android（Linux 3.11+）允许非特权进程创建 **ICMP datagram ping socket**
-（`SOCK_DGRAM + IPPROTO_ICMP`）。所依赖的 pingtunnel 版本（上游 commit
-`699904d`，`icmp_listen_android.go`）在 Android 目标上以
-`icmp.ListenPacket("udp4", ...)` 替代需要 `CAP_NET_RAW` 的 raw socket，并适配了
-内核对该类 socket 的两个行为：重写 echo ID（客户端跳过 ID 校验）与
-`*net.UDPAddr` 地址类型。因此 App 只要持有 `INTERNET` 权限即可收发自定义
-ICMP echo 包，无需 root。
+## How Root-Free ICMP Works
 
-## 功能
+Android (Linux kernel 3.11+) allows unprivileged processes to create **ICMP datagram ping sockets** (`SOCK_DGRAM + IPPROTO_ICMP`). The embedded pingtunnel core replaces raw sockets (which require `CAP_NET_RAW` or root privileges) with `icmp.ListenPacket("udp4", ...)` on Android targets (`icmp_listen_android.go`).
 
-- 多配置管理（Shadowsocks 风格电源键、扫码/链接/文件导入导出、真实延迟测速、故障切换）
-- VPN 全量接管（IPv4/IPv6）、分应用代理（全部/仅选中/排除选中）
-- 智能分流：绕过局域网、CN 地址直连（chnroute 精确表）、大陆域名直连（可自定义规则）
-- 断线自动重连（指数退避）、网络切换（WiFi↔蜂窝）无缝重建、可信 WiFi 自动暂停
-- 快速设置磁贴、开机自启、始终开启 VPN 引导
-- 实时速率通知栏、会话/累计流量统计、当前连接与单连接历史
-- 内核日志查看、隧道自检、IP/DNS 泄漏检测、出口 IP 归属地查询
-- 认证与加密：v3 单一密码（认证码 PBKDF2 派生，ChaCha20-Poly1305 默认全程加密，可覆盖为 AES-256/128）
+It automatically accommodates the kernel's unprivileged ICMP socket behaviors:
+1. Re-writing echo IDs in outgoing packets (the client skips explicit ID checks).
+2. Supporting `*net.UDPAddr` address types natively.
 
-## 构建
+Consequently, any regular Android application holding only standard `INTERNET` permission can exchange custom ICMP echo packets without root access.
 
-环境要求：JDK 17、Android SDK + NDK、Go 1.26+。
+---
+
+## Features
+
+- **Rootless Operation**: Tunnel all TCP/UDP traffic through ICMP without requiring root or custom ROMs.
+- **Full VPN Capture**: Intercept and proxy system-wide IPv4 and IPv6 traffic via Android `VpnService` and high-performance `hev-socks5-tunnel`.
+- **Per-App Proxy**: Fine-grained routing control — proxy all apps, only selected apps, or bypass selected apps.
+- **Smart Split Tunneling**: Built-in bypass LAN, mainland China IP direct routing (APNIC chnroute tables), and direct domain lists with customizable routing rules.
+- **Multi-Profile Management**: Shadowsocks-style power toggle, import/export via QR code, deep links, or JSON files, real-time RTT latency testing, and automatic failover.
+- **Seamless Reconnection**: Exponential backoff reconnects, seamless tunnel re-establishment during network handoffs (Wi-Fi ↔ Cellular), and automatic pausing on trusted Wi-Fi networks.
+- **System Integration**: Quick Settings Tile, boot-completed auto-start, and Always-On VPN guidance.
+- **Real-Time Diagnostics & Analytics**: Live transfer speed notifications, per-session and accumulated traffic metrics, active connection inspect, and connection history.
+- **Security & Integrity Checks**: Integrated kernel log viewer, tunnel self-check, IP/DNS leak testing, and remote egress IP geo-lookup.
+- **Unified AEAD Encryption**: Powered by pingtunnel v3.1 single passphrase authentication (`-password`) with PBKDF2 key derivation and ChaCha20-Poly1305 (default) or AES-256 / AES-128 GCM encryption.
+
+---
+
+## Server Deployment
+
+Run a [pingtunnel](https://github.com/esrrhs/pingtunnel) **v3.1+** server on your remote machine:
 
 ```bash
-# 1. 构建全部 native 产物（首次会克隆 pingtunnel / hev-socks5-tunnel 源码）
-bash scripts/build_native.sh
-#   产物：app/src/main/jniLibs/<abi>/libpingtunnel.so      —— pingtunnel 内核（Go 交叉编译）
-#         app/src/main/jniLibs/<abi>/libhev-socks5-tunnel.so —— tun2socks（ndk-build）
+# Start server with default ChaCha20-Poly1305 encryption
+sudo ./pingtunnel -type server -password your-strong-passphrase
 
-# 2. 打 APK
+# Or specify AES-256 GCM encryption
+sudo ./pingtunnel -type server -password your-strong-passphrase -encrypt aes256
+```
+
+In the Android app, create a new profile, enter your server's IP address or domain name, and configure the identical passphrase and encryption algorithm.
+
+---
+
+## Parameter Mapping
+
+App configuration fields map directly to pingtunnel client CLI arguments:
+
+| App Field | CLI Argument | Default | Description |
+|---|---|---|---|
+| Server Address | `-s` | *Required* | Server IP address or domain name (periodically re-resolved) |
+| Password | `-password` | *Required* | Shared secret for authentication and AEAD encryption (≥ 8 characters) |
+| Cipher | `-encrypt` | `chacha20` | ChaCha20-Poly1305 (default), AES-256, or AES-128 |
+| Idle Timeout | `-timeout` | `60` | Connection idle timeout in seconds |
+| Max Connections | `-maxconn` | `0` | Maximum concurrent connections (`0` = unlimited) |
+| Congestion Control | `-congestion` | `bb` | Bandwidth-adaptive flow control (`""` disables) |
+| Route IPv6 | — | `true` | Whether to route IPv6 (`::/0`) through the VPN interface |
+
+> ℹ️ **Note on v3.1+ Tuning**: Low-level TCP ARQ parameters (buffer sizes, sliding window, resend timeouts, and compression) are managed dynamically and automatically by the latest pingtunnel core.
+>
+> Fixed local parameters: `-type client -socks5 -l 127.0.0.1:<random-port> -nolog`.
+
+---
+
+## Building
+
+### Prerequisites
+
+- **JDK**: Java 17+
+- **Android SDK & NDK**: NDK r25+ (NDK r29 recommended, API 26+)
+- **Go**: 1.26+
+
+### Build Steps
+
+```bash
+# 1. Build all native binaries (cross-compiles pingtunnel + ndk-build hev-socks5-tunnel)
+bash scripts/build_native.sh
+# Outputs:
+#   app/src/main/jniLibs/<abi>/libpingtunnel.so       (Go executable disguised as .so)
+#   app/src/main/jniLibs/<abi>/libhev-socks5-tunnel.so (tun2socks native bridge)
+
+# 2. Build the Debug APK
 ./gradlew assembleDebug
 
-# 3. 单元测试（含用户态分流器 JVM E2E）
+# 3. Run JVM unit & E2E tests
 ./gradlew testDebugUnitTest
 ```
 
-说明：
+### Technical Notes
 
-- 内核固定在已知稳定提交（含免 root ICMP 支持），可用环境变量覆盖：
-  `PINGTUNNEL_DIR`（本地源码路径）、`PINGTUNNEL_COMMIT`、`PINGTUNNEL_ABIS`。
-- `CGO_ENABLED=1` 必须开启：Android 没有 `/etc/resolv.conf`，纯 Go 解析器无法
-  解析服务器域名；链接 bionic 用系统解析器。
-- 链接参数带 `-Wl,-z,max-page-size=16384`，满足 Android 15+ 的 16KB 页对齐要求。
-- `app/build.gradle.kts` 的 `useLegacyPackaging = true` 必须保留：让 so 落盘为
-  真实文件，`libpingtunnel.so`（实为可执行文件）才能在 `nativeLibraryDir` 获得
-  执行权限。
+- **Native Execution**: `libpingtunnel.so` is a static Go executable packed into `jniLibs` to reside in `nativeLibraryDir`, where Android API 29+ still permits binary execution. `useLegacyPackaging = true` in `app/build.gradle.kts` is required to extract the `.so` to disk upon installation.
+- **16 KB Page Size Compatibility**: Go binaries are linked with `-extldflags=-Wl,-z,max-page-size=16384` to ensure compatibility with Android 15+ 16 KB memory page alignment requirements.
+- **System DNS Resolver**: `CGO_ENABLED=1` is enforced during cross-compilation so that pingtunnel links against Bionic libc to resolve hostnames via the Android system resolver (as Android lacks `/etc/resolv.conf`).
 
-## 服务端
+---
 
-在服务器上运行 [pingtunnel](https://github.com/esrrhs/pingtunnel) **v3** server，
-客户端配置里填该服务器地址与相同密码（v3 起密码必填、最少 8 字符，
-认证与加密一体，流量始终加密；旧版 v2 数字 key 协议不互通）：
+## Acknowledgements
 
-```bash
-sudo ./pingtunnel -type server -password your-passphrase
+- [esrrhs/pingtunnel](https://github.com/esrrhs/pingtunnel) — Core ICMP tunneling engine
+- [itismoej](https://github.com/itismoej) — Android rootless ICMP datagram ping socket support (pingtunnel PR #79)
+- [heiher/hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) — tun2socks data plane
+- [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) — Direct domain list data source
 
-# 或指定加密算法（默认 ChaCha20-Poly1305）
-sudo ./pingtunnel -type server -password your-passphrase -encrypt aes256
-```
-
-## pingtunnel 参数映射
-
-App 配置项与 pingtunnel client 命令行参数一一对应：
-
-| App 字段 | CLI 参数 | 默认 |
-| --- | --- | --- |
-| 服务器地址 | `-s` | 必填 |
-| 密码（认证+加密一体） | `-password` | 必填（≥8 字符） |
-| 加密算法 | `-encrypt` | ChaCha20（可换 AES-256/128） |
-| 连接超时 | `-timeout` | 60 秒 |
-| TCP 收发缓冲区 | `-tcp_bs` | 1MB |
-| TCP 最大窗口 | `-tcp_mw` | 20000（上限 100000） |
-| TCP 重传超时 | `-tcp_rst` | 400ms |
-| TCP 压缩阈值 | `-tcp_gz` | 0（关闭） |
-| 最大连接数 | `-maxconn` | 0（不限） |
-| 拥塞控制 | `-congestion` | bb（可关） |
-
-本地固定参数：`-type client -socks5 -l 127.0.0.1:<随机端口> -nolog 1`（v3 中 `-sock5 1` 改为布尔 `-socks5`）。
-
-## 与桌面版的关系
-
-本仓库原为 [esrrhs/pingtunnel-client](https://github.com/esrrhs/pingtunnel-client)
-（Go + Fyne 桌面 GUI），现已重构为 Android 客户端，桌面版代码见上游仓库。
-
-## 致谢
-
-- [esrrhs/pingtunnel](https://github.com/esrrhs/pingtunnel) —— 隧道内核
-- [itismoej](https://github.com/itismoej) —— Android 免 root ICMP ping socket 支持（pingtunnel PR #79）
-- [heiher/hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) —— tun2socks 数据面
-- 本项目 UI/服务框架移植自 spp_client_android
+---
 
 ## License
 
-Apache-2.0（见 [LICENSE](LICENSE)）
+[Apache-2.0](LICENSE) © [esrrhs](https://github.com/esrrhs)
