@@ -281,46 +281,6 @@ fun ConnectionFields(
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
-            value = config.tcpBufferSize.toString(),
-            onValueChange = { text ->
-                onChange(config.copy(tcpBufferSize = text.toIntOrNull() ?: 0))
-            },
-            label = { Text(stringResource(R.string.field_tcp_buffer)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = config.tcpMaxWin.toString(),
-            onValueChange = { text ->
-                onChange(config.copy(tcpMaxWin = text.toIntOrNull() ?: 0))
-            },
-            label = { Text(stringResource(R.string.field_tcp_maxwin)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = config.tcpResendTimems.toString(),
-            onValueChange = { text ->
-                onChange(config.copy(tcpResendTimems = text.toIntOrNull() ?: 0))
-            },
-            label = { Text(stringResource(R.string.field_tcp_resend)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = config.tcpCompress.toString(),
-            onValueChange = { text ->
-                onChange(config.copy(tcpCompress = text.toIntOrNull() ?: 0))
-            },
-            label = { Text(stringResource(R.string.field_tcp_compress)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
             value = if (config.maxConn > 0) config.maxConn.toString() else "",
             onValueChange = { text ->
                 onChange(config.copy(maxConn = text.toIntOrNull() ?: 0))

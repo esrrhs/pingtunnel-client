@@ -24,8 +24,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PT_DIR="${PINGTUNNEL_DIR:-$ROOT/third_party/pingtunnel}"
-# pin 到 v3（tag 3.0：单一 -password 取代数字 key/-encrypt-key，-sock5 1 变 -socks5）
-PT_COMMIT="${PINGTUNNEL_COMMIT:-0e728cd}"
+# pin 到最新 commit（包含 v3.1 和最新参数整理、免 root ping socket 支持）
+PT_COMMIT="${PINGTUNNEL_COMMIT:-7745d60}"
 OUT_DIR="$ROOT/app/src/main/jniLibs"
 ABIS=(${PINGTUNNEL_ABIS:-arm64-v8a x86_64})
 

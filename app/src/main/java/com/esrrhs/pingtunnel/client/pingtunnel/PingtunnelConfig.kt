@@ -27,13 +27,17 @@ data class PingtunnelConfig(
     val cipher: String = CIPHER_DEFAULT,
     /** 连接不活跃超时秒数（-timeout）。 */
     val timeout: Int = 60,
-    /** tcp 模式发送接收缓冲区大小字节（-tcp_bs）。 */
+    /** @deprecated pingtunnel v3.1+ 自动管理缓冲区大小。保留用于旧配置兼容。 */
+    @Deprecated("Managed automatically by pingtunnel v3.1+")
     val tcpBufferSize: Int = DEFAULT_TCP_BUFFER_SIZE,
-    /** tcp 模式最大窗口（-tcp_mw），受 FRAME_MAX_ID/10 = 100000 上限约束。 */
+    /** @deprecated pingtunnel v3.1+ 自动管理滑动窗口。保留用于旧配置兼容。 */
+    @Deprecated("Managed automatically by pingtunnel v3.1+")
     val tcpMaxWin: Int = DEFAULT_TCP_MAX_WIN,
-    /** tcp 模式超时重传毫秒（-tcp_rst）。 */
+    /** @deprecated pingtunnel v3.1+ 自动管理超时重传。保留用于旧配置兼容。 */
+    @Deprecated("Managed automatically by pingtunnel v3.1+")
     val tcpResendTimems: Int = DEFAULT_TCP_RESEND_TIME_MS,
-    /** tcp 模式数据超过该大小启用压缩（-tcp_gz），0 不压缩。 */
+    /** @deprecated pingtunnel v3.1+ 始终全量加密传输，无需压缩。保留用于旧配置兼容。 */
+    @Deprecated("Managed automatically by pingtunnel v3.1+")
     val tcpCompress: Int = 0,
     /** 最大连接数（-maxconn），0 不限制。 */
     val maxConn: Int = 0,

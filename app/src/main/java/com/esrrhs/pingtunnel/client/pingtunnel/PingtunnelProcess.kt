@@ -76,12 +76,6 @@ class PingtunnelProcess(context: Context) {
                 add("-encrypt"); add(config.cipher)
             }
             add("-timeout"); add(config.timeout.toString())
-            add("-tcp_bs"); add(config.tcpBufferSize.toString())
-            add("-tcp_mw"); add(config.tcpMaxWin.toString())
-            add("-tcp_rst"); add(config.tcpResendTimems.toString())
-            if (config.tcpCompress > 0) {
-                add("-tcp_gz"); add(config.tcpCompress.toString())
-            }
             if (config.maxConn > 0) {
                 add("-maxconn"); add(config.maxConn.toString())
             }
@@ -90,7 +84,7 @@ class PingtunnelProcess(context: Context) {
             }
             // Android 上进程 cwd 不可写，gohome/loggo 会往 cwd 写日志文件而崩溃；
             // 关闭其日志文件，输出走 stdout（下面已采集并落盘）
-            add("-nolog"); add("1")
+            add("-nolog")
         }
 
         intentionallyStopped = false
