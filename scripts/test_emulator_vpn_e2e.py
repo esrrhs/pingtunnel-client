@@ -1267,7 +1267,7 @@ def start_in_emulator_pingtunnel_server(adb, serial, password=E2E_SERVER_PASSWOR
     time.sleep(1)
     run_adb(
         adb, serial,
-        ["shell", f"setsid /data/local/tmp/pingtunnel-server -type server -password {password} -nolog 1"
+        ["shell", f"setsid /data/local/tmp/pingtunnel-server -type server -password {password} -nolog"
                   " >/data/local/tmp/pt-server.log 2>&1 &"],
         check=False,
     )
@@ -1299,6 +1299,10 @@ def direct_kernel_icmp_check(adb, serial, guest_ip, password=E2E_SERVER_PASSWORD
     证明「免 root ping socket 的 ICMP 收发」真实可用（pong 全程为
     App uid 收到的服务端回包）。VPN 会话下的数据面受平台 ICMP 劣化
     窗口影响是概率性的，这一步不受其影响。
+
+    pingtunnel 3.1 起把心跳「ping」/「pong from」降到 debug（默认 info
+    下一条都不会出现）。门禁仍要求至少 3 条真实 pong，所以这里显式打开
+    debug；-nolog 在 v3.1 已是布尔开关，不能再写成「-nolog 1」。
     """
     pkg = "com.esrrhs.pingtunnel.client"
     abi = detect_abi(adb, serial)
@@ -1321,7 +1325,8 @@ def direct_kernel_icmp_check(adb, serial, guest_ip, password=E2E_SERVER_PASSWORD
         run_adb(adb, serial, [
             "shell",
             f"run-as {pkg} sh -c 'cd files && setsid {bin_path} -type client -l 127.0.0.1:10800"
-            f" -s {guest_ip} -socks5 -password {password} -nolog 1 > direct.log 2>&1 < /dev/null &'",
+            f" -s {guest_ip} -socks5 -password {password} -nolog -loglevel debug"
+            f" > direct.log 2>&1 < /dev/null &'",
         ], check=False, timeout=15)
     except subprocess.TimeoutExpired:
         print("    [WARN] 直连内核启动命令未返回（预期内，靠 direct.log 判定）")
@@ -1334,7 +1339,11 @@ def direct_kernel_icmp_check(adb, serial, guest_ip, password=E2E_SERVER_PASSWORD
     run_adb(adb, serial, ["shell", "pkill -f '[l]ibpingtunnel.so -type client'"], check=False)
     if pongs < 3:
         log = run_adb(adb, serial, ["shell", f"run-as {pkg} cat files/direct.log"], check=False).stdout or ""
-        raise RuntimeError(f"无 VPN 直连内核未收到足够 pong（{pongs}/3），免 root ICMP 收发异常。日志尾部：\n{log[-1500:]}")
+        pings = log.count("ping ")
+        raise RuntimeError(
+            f"无 VPN 直连内核未收到足够 pong（{pongs}/3，可见 ping {pings}），免 root ICMP 收发异常。"
+            f"日志尾部：\n{log[-1500:]}"
+        )
     print(f"==> [PASS] 无 VPN 直连门禁：App 身份内核 ICMP 收发正常（{pongs} pongs）")
 
 
