@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#0F4C81</color>
+    <!-- PingTunnel 品牌色：深琥珀底 + 信号橙，区别于 SPP 客户端的蓝色盾牌 -->
+    <color name="ic_launcher_background">#1C1408</color>
 </resources>
