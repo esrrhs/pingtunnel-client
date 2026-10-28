@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PingTunnel — Demo Video · 演示视频</title>
+  <meta name="description" content="PingTunnel for Android: one-tap VPN connection, live traffic and per-app connection records. PingTunnel VPN 客户端演示：一键连接、实时流量与访问记录。">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0b0c; --card: #17140f; --fg: #f2e8dc; --muted: #b9ae9e;
+      --amber: #ffb74d; --line: #31281b; --link: #ffb74d;
+    }
+    @media (prefers-color-scheme: light) {
+      :root { --bg: #f6f3ee; --card: #ffffff; --fg: #1b1712; --muted: #6b6255; --line: #e6dfd4; --link: #a05c00; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+    h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+    .zh-sub { color: var(--muted); font-size: 1rem; margin: 0 0 1.5rem; }
+    nav a { color: var(--link); text-decoration: none; font-size: .95rem; }
+    nav a:hover { text-decoration: underline; }
+    .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1.5rem; align-items: start; }
+    @media (max-width: 860px) { .stage { grid-template-columns: 1fr; } }
+    .player {
+      position: relative; background: #000; border-radius: 18px; overflow: hidden;
+      border: 1px solid var(--line); box-shadow: 0 12px 40px rgba(0,0,0,.25);
+    }
+    video { display: block; width: 100%; height: auto; max-height: 82vh; margin: 0 auto; background: #000; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem 1.25rem; }
+    .card h2 { font-size: 1.05rem; margin: 0 0 .75rem; }
+    ol { margin: 0; padding-left: 1.2rem; }
+    li { margin: .55rem 0; font-size: .94rem; }
+    li .t { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .85rem; margin-right: .4rem; }
+    li .zh { display: block; color: var(--muted); font-size: .85rem; }
+    .dl { margin-top: 1.5rem; display: flex; gap: .75rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: .65rem 1.1rem; border-radius: 10px;
+      background: var(--amber); color: #2a1a00; font-weight: 600; text-decoration: none;
+    }
+    .btn.ghost { background: transparent; color: var(--link); border: 1px solid var(--line); }
+    .note { color: var(--muted); font-size: .85rem; margin-top: 1.25rem; }
+    .badge { display: inline-block; background: rgba(255,183,77,.15); color: var(--amber);
+      border: 1px solid rgba(255,183,77,.4); border-radius: 999px; padding: .15rem .6rem; font-size: .78rem; margin-bottom: .75rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <span class="badge">Google Play review demo · 审核演示</span>
+        <h1>PingTunnel — VPN behavior demo</h1>
+        <p class="zh-sub">PingTunnel 功能演示：一键连接 ICMP 隧道，实时查看流量、通知速率与访问记录</p>
+      </div>
+      <nav><a href="./index.html">← Privacy policy · 隐私政策</a></nav>
+    </header>
+
+    <div class="stage">
+      <div>
+        <div class="player">
+          <video controls playsinline preload="metadata"
+                 poster="media/poster.jpg"
+                 src="media/pingtunnel-vpn-demo.mp4"></video>
+        </div>
+        <p class="note">
+          Recorded on an Android 15 emulator with a real pingtunnel server backend.
+          No audio; English captions are burned in and the list on the right has Chinese.
+          · 视频在 Android 15 模拟器 + 真实 pingtunnel 服务端环境录制，无音轨，英文字幕已烧录，右侧附中文说明。
+        </p>
+        <div class="dl">
+          <a class="btn" href="media/pingtunnel-vpn-demo.mp4" download>Download MP4 · 下载视频</a>
+          <a class="btn ghost" href="https://github.com/esrrhs/pingtunnel-client">Source code · 源码</a>
+        </div>
+      </div>
+
+      <aside class="card">
+        <h2>What the video shows · 视频内容</h2>
+        <ol>
+          <li><span class="t">0:00</span>Tap the power button to connect<span class="zh">点击电源按钮发起连接</span></li>
+          <li><span class="t">0:05</span>Connected — tunnel established, key icon in the status bar<span class="zh">连接成功，状态栏显示 VPN 钥匙图标</span></li>
+          <li><span class="t">0:24</span>Chrome traffic routed through the PingTunnel VPN<span class="zh">Chrome 网页流量经 PingTunnel VPN 转发</span></li>
+          <li><span class="t">0:26</span>Persistent notification with live upload/download speed<span class="zh">常驻通知，实时上下行速率</span></li>
+          <li><span class="t">0:34</span>Live sessions: app, destination, proxy path and bytes<span class="zh">实时连接列表：应用、目标、代理路径、字节数</span></li>
+          <li><span class="t">0:43</span>Connection history with per-connection records<span class="zh">连接历史：逐条访问记录</span></li>
+          <li><span class="t">1:04</span>Share a profile by QR code<span class="zh">二维码分享配置</span></li>
+          <li><span class="t">1:24</span>Add or edit profiles<span class="zh">新增 / 编辑配置</span></li>
+          <li><span class="t">1:33</span>Settings (boot connect, reconnect, split rules, trusted Wi-Fi)<span class="zh">设置页（开机连接、重连、分流、可信 Wi-Fi）</span></li>
+          <li><span class="t">1:49</span>Leak-check screen<span class="zh">防泄漏检查页</span></li>
+          <li><span class="t">2:00</span>One tap disconnect<span class="zh">一键断开</span></li>
+          <li><span class="t">2:14</span>Traffic totals after the session<span class="zh">本次会话累计流量</span></li>
+        </ol>
+        <p class="note">
+          Traffic is tunneled only to the pingtunnel server <strong>you</strong> configure;
+          the app never collects browsing data. ·
+          流量仅发往你自行配置的 pingtunnel 服务器，App 不收集任何浏览数据。
+        </p>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

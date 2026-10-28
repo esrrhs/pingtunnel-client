@@ -284,5 +284,5 @@
     <string name="action_leak">防泄漏</string>
     <string name="privacy_policy_title">隐私政策</string>
     <string name="privacy_policy_subtitle">查看本应用如何处理数据（GitHub Pages）</string>
-    <string name="privacy_policy_url">https://github.com/esrrhs/pingtunnel-client</string>
+    <string name="privacy_policy_url">https://esrrhs.github.io/pingtunnel-client/</string>
 </resources>

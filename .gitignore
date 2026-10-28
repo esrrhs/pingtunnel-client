@@ -31,3 +31,9 @@ __pycache__/
 # E2E 临时构建产物
 scripts/e2e/overlay.json
 scripts/e2e/pingtunnel-server-*
+
+# 演示录屏临时产物（CI 作为 artifact 上传，不入库）
+take*.mp4
+full_raw*.mp4
+concat.txt
+*-logcat.txt
