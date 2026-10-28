@@ -2,6 +2,7 @@ package com.esrrhs.pingtunnel.client.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,7 +81,8 @@ private val SsGreen = Color(0xFF5FB878)
 private val SsAmber = Color(0xFFF0A020)
 private val SsRed = Color(0xFFE05252)
 private val SsGray = Color(0xFF6E7681)
-private val CircleOff = Color(0xFF2A2D31)
+// 未连接时的暖黑底，配合品牌琥珀描边区分于 SPP 的灰蓝
+private val CircleOff = Color(0xFF241B10)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,7 +163,11 @@ fun MainScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAdd, containerColor = SsGreen) {
+            FloatingActionButton(
+                onClick = onAdd,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.action_add_profile))
             }
         },
@@ -347,6 +353,8 @@ private fun PowerButton(
         VpnState.Disconnected -> CircleOff
     }
     val busy = state is VpnState.Connecting || state is VpnState.Disconnecting
+    val idle = state == VpnState.Disconnected
+    val accent = MaterialTheme.colorScheme.primary
 
     Box(contentAlignment = Alignment.Center) {
         Box(
@@ -354,6 +362,9 @@ private fun PowerButton(
                 .size(184.dp)
                 .clip(CircleShape)
                 .background(color)
+                .then(
+                    if (idle) Modifier.border(2.dp, accent, CircleShape) else Modifier,
+                )
                 .clickable(enabled = enabled && !busy, onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
@@ -367,7 +378,7 @@ private fun PowerButton(
             Icon(
                 Icons.Filled.PowerSettingsNew,
                 contentDescription = stringResource(R.string.tile_label),
-                tint = if (state == VpnState.Disconnected) SsGray else Color.White,
+                tint = if (idle) accent else Color.White,
                 modifier = Modifier.size(72.dp),
             )
         }
