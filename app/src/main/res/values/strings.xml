@@ -285,4 +285,38 @@
     <string name="privacy_policy_title">隐私政策</string>
     <string name="privacy_policy_subtitle">查看本应用如何处理数据（GitHub Pages）</string>
     <string name="privacy_policy_url">https://esrrhs.github.io/pingtunnel-client/</string>
+
+    <!-- 国家分流预设 -->
+    <string name="setting_dns_region_title">DNS 区域分流策略</string>
+    <string name="setting_dns_region_subtitle">针对不同国家/地区内置直连域名与顶级域规则分流</string>
+    <string name="split_dns_region_title">DNS 区域分流策略</string>
+    <string name="split_dns_region_subtitle">内置针对各国的直连顶级域与核心服务域名分流</string>
+    <string name="region_preset_cn">中国 (China)</string>
+    <string name="region_preset_ir">伊朗 (Iran)</string>
+    <string name="region_preset_ru">俄罗斯 (Russia)</string>
+    <string name="region_preset_tr">土耳其 (Turkey)</string>
+    <string name="region_preset_mm">缅甸 (Myanmar)</string>
+    <string name="region_preset_pk">巴基斯坦 (Pakistan)</string>
+    <string name="region_preset_vn">越南 (Vietnam)</string>
+    <string name="region_preset_eg">埃及 (Egypt)</string>
+    <string name="region_preset_ae">阿联酋 (UAE)</string>
+    <string name="region_preset_sa">沙特阿拉伯 (Saudi Arabia)</string>
+    <string name="region_preset_in">印度 (India)</string>
+    <string name="region_preset_none">纯净全局 (None / Global)</string>
+
+    <!-- 语言切换 -->
+    <string name="setting_language_title">应用语言</string>
+    <string name="setting_language_subtitle">切换应用界面显示语言</string>
+    <string name="language_follow_system">跟随系统 (System Default)</string>
+    <string name="language_zh">中文 (简体)</string>
+    <string name="language_en">English</string>
+    <string name="language_fa">فارسی (Persian)</string>
+    <string name="language_ru">Русский (Russian)</string>
+    <string name="language_tr">Türkçe (Turkish)</string>
+    <string name="language_my">မြန်မာစာ (Burmese)</string>
+    <string name="language_ur">اردو (Urdu)</string>
+    <string name="language_vi">Tiếng Việt (Vietnamese)</string>
+    <string name="language_ar">العربية (Arabic)</string>
+    <string name="language_hi">हिन्दी (Hindi)</string>
+
 </resources>

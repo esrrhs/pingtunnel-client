@@ -14,8 +14,12 @@ data class AppSettings(
     val trustedWifiEnabled: Boolean = false,
     /** 可信 WiFi SSID 集合（精确匹配，去掉系统返回的引号）。 */
     val trustedWifiSsids: Set<String> = emptySet(),
-    /** 启用域名直连规则（位于 hev 与 socks5_client 之间的本地分流，内置大陆域名表）。 */
+    /** 启用域名直连规则（位于 hev 与 socks5_client 之间的本地分流）。 */
     val domainDirectEnabled: Boolean = true,
+    /** DNS 区域分流策略（如 CN, IR, RU, TR, MM, PK, VN, EG, AE, SA, IN, NONE）。 */
+    val dnsRegionPreset: String = "CN",
     /** 域名直连规则原文（每行一个域名，保存时不解析；启动时规整）。 */
     val domainDirectRulesText: String = "",
+    /** 应用语言偏好（"" 为跟随系统，zh, en, fa, ru, tr, my, ur, vi, ar, hi 等）。 */
+    val appLanguage: String = "",
 )

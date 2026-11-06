@@ -52,9 +52,11 @@ def main():
         version_code = bundle_resp.get('versionCode')
         print(f"==> Bundle uploaded successfully! VersionCode: {version_code}")
 
+        target_track = os.environ.get('PLAY_TRACK', sys.argv[1] if len(sys.argv) > 1 else 'internal')
+        version_name = os.environ.get('RELEASE_NAME', '0.2.0')
         release_body = {
             'releases': [{
-                'name': '0.1.0',
+                'name': version_name,
                 'versionCodes': [str(version_code)],
                 'status': 'completed',
                 'releaseNotes': [
@@ -64,11 +66,11 @@ def main():
             }]
         }
 
-        print("==> Updating track: production")
+        print(f"==> Updating track: {target_track}")
         track_resp = service.edits().tracks().update(
             packageName=PACKAGE_NAME,
             editId=edit_id,
-            track='production',
+            track=target_track,
             body=release_body
         ).execute()
         print(f"==> Track updated: {track_resp.get('track')}")

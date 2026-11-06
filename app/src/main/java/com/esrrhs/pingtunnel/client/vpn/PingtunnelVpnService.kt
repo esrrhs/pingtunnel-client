@@ -292,8 +292,9 @@ class PingtunnelVpnService : VpnService() {
             profile.bypassLan ||
             profile.bypassCn
         val directRules: Set<String> = if (cachedSettings.domainDirectEnabled) {
+            val preset = com.esrrhs.pingtunnel.client.util.DnsRegionPreset.fromCode(cachedSettings.dnsRegionPreset)
             LinkedHashSet<String>(
-                com.esrrhs.pingtunnel.client.util.BundledDirectDomains.load(this),
+                preset.resolveDirectDomains(this),
             ).apply {
                 addAll(
                     com.esrrhs.pingtunnel.client.util.DomainRuleMatcher

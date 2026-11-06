@@ -50,6 +50,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.esrrhs.pingtunnel.client.R
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
+import com.esrrhs.pingtunnel.client.util.AppLanguage
+import com.esrrhs.pingtunnel.client.util.DnsRegionPreset
 import com.esrrhs.pingtunnel.client.data.AppSettings
 import com.esrrhs.pingtunnel.client.util.WifiNames
 import com.esrrhs.pingtunnel.client.vpn.AlwaysOnVpn
@@ -105,6 +111,7 @@ fun SettingsScreen(
                 checked = settings.defaultBypassLan,
                 onCheckedChange = { onChange(settings.copy(defaultBypassLan = it)) },
             )
+            LanguageSection(settings = settings, onChange = onChange)
 
             DomainDirectSection(settings = settings, onChange = onChange)
             TrustedWifiSection(settings = settings, onChange = onChange)
@@ -147,10 +154,66 @@ private fun PrivacyPolicyRow() {
 }
 
 @Composable
+private fun LanguageSection(
+    settings: AppSettings,
+    onChange: (AppSettings) -> Unit,
+) {
+    val context = LocalContext.current
+    var expanded by remember { mutableStateOf(false) }
+    val currentLang = AppLanguage.fromCode(settings.appLanguage)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+    ) {
+        Text(text = stringResource(R.string.setting_language_title), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = stringResource(R.string.setting_language_subtitle),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+        ) {
+            OutlinedTextField(
+                value = stringResource(currentLang.titleRes),
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                    .fillMaxWidth(),
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                AppLanguage.entries.forEach { lang ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(lang.titleRes)) },
+                        onClick = {
+                            onChange(settings.copy(appLanguage = lang.code))
+                            AppLanguage.applyLanguage(context, lang.code)
+                            expanded = false
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun DomainDirectSection(
     settings: AppSettings,
     onChange: (AppSettings) -> Unit,
 ) {
+    var presetExpanded by remember { mutableStateOf(false) }
+    val currentPreset = DnsRegionPreset.fromCode(settings.dnsRegionPreset)
+
     ToggleRow(
         title = stringResource(R.string.setting_domain_direct_title),
         subtitle = stringResource(R.string.setting_domain_direct_subtitle),
@@ -158,6 +221,52 @@ private fun DomainDirectSection(
         onCheckedChange = { onChange(settings.copy(domainDirectEnabled = it)) },
     )
     if (settings.domainDirectEnabled) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.setting_dns_region_title),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+            )
+            Text(
+                text = stringResource(R.string.setting_dns_region_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            ExposedDropdownMenuBox(
+                expanded = presetExpanded,
+                onExpandedChange = { presetExpanded = it },
+            ) {
+                OutlinedTextField(
+                    value = stringResource(currentPreset.titleRes),
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = presetExpanded) },
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        .fillMaxWidth(),
+                )
+                ExposedDropdownMenu(
+                    expanded = presetExpanded,
+                    onDismissRequest = { presetExpanded = false },
+                ) {
+                    DnsRegionPreset.entries.forEach { preset ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(preset.titleRes)) },
+                            onClick = {
+                                onChange(settings.copy(dnsRegionPreset = preset.code))
+                                presetExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+        }
+
         OutlinedTextField(
             value = settings.domainDirectRulesText,
             onValueChange = { onChange(settings.copy(domainDirectRulesText = it)) },

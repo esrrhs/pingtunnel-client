@@ -27,7 +27,9 @@ class SettingsRepository(context: Context) {
         val TRUSTED_WIFI_ENABLED = booleanPreferencesKey("trusted_wifi_enabled")
         val TRUSTED_WIFI_SSIDS = stringSetPreferencesKey("trusted_wifi_ssids")
         val DOMAIN_DIRECT_ENABLED = booleanPreferencesKey("domain_direct_enabled")
+        val DNS_REGION_PRESET = stringPreferencesKey("dns_region_preset")
         val DOMAIN_DIRECT_RULES = stringPreferencesKey("domain_direct_rules")
+        val APP_LANGUAGE = stringPreferencesKey("app_language")
 
         /** 一次性迁移标记：把「智能连接」类开关的历史默认值刷为开启。 */
         val MIGRATED_SMART_DEFAULTS = booleanPreferencesKey("migrated_smart_defaults_v1")
@@ -57,7 +59,9 @@ class SettingsRepository(context: Context) {
                 trustedWifiEnabled = prefs[Keys.TRUSTED_WIFI_ENABLED] ?: false,
                 trustedWifiSsids = prefs[Keys.TRUSTED_WIFI_SSIDS] ?: emptySet(),
                 domainDirectEnabled = prefs[Keys.DOMAIN_DIRECT_ENABLED] ?: true,
+                dnsRegionPreset = prefs[Keys.DNS_REGION_PRESET] ?: "CN",
                 domainDirectRulesText = prefs[Keys.DOMAIN_DIRECT_RULES] ?: "",
+                appLanguage = prefs[Keys.APP_LANGUAGE] ?: "",
             )
         }
     }
@@ -71,7 +75,9 @@ class SettingsRepository(context: Context) {
             prefs[Keys.TRUSTED_WIFI_ENABLED] = settings.trustedWifiEnabled
             prefs[Keys.TRUSTED_WIFI_SSIDS] = settings.trustedWifiSsids
             prefs[Keys.DOMAIN_DIRECT_ENABLED] = settings.domainDirectEnabled
+            prefs[Keys.DNS_REGION_PRESET] = settings.dnsRegionPreset
             prefs[Keys.DOMAIN_DIRECT_RULES] = settings.domainDirectRulesText
+            prefs[Keys.APP_LANGUAGE] = settings.appLanguage
         }
     }
 

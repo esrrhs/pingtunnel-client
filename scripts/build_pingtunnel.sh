@@ -24,8 +24,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PT_DIR="${PINGTUNNEL_DIR:-$ROOT/third_party/pingtunnel}"
-# pin 到最新 commit（包含 v3.1 和最新参数整理、免 root ping socket 支持）
-PT_COMMIT="${PINGTUNNEL_COMMIT:-7745d60}"
+# pin 到最新 commit（包含最新 gohome 依赖与免 root ping socket 支持）
+PT_COMMIT="${PINGTUNNEL_COMMIT:-b7d92c3}"
 OUT_DIR="$ROOT/app/src/main/jniLibs"
 ABIS=(${PINGTUNNEL_ABIS:-arm64-v8a x86_64})
 
@@ -33,8 +33,6 @@ if [ ! -d "$PT_DIR" ]; then
     git clone https://github.com/esrrhs/pingtunnel.git "$PT_DIR"
 fi
 
-# 与模板 build_spp.sh 不同：这里固定到已知提交，不追上游最新，保证行为稳定。
-# PINGTUNNEL_DIR 指向非 git 目录（如解压源码）时跳过检出。
 if [ -d "$PT_DIR/.git" ]; then
     cd "$PT_DIR"
     if [ "$(git rev-parse --short HEAD 2>/dev/null || true)" != "$PT_COMMIT" ]; then
@@ -42,8 +40,9 @@ if [ -d "$PT_DIR/.git" ]; then
         git fetch origin || git fetch --unshallow origin || true
         git checkout -q "$PT_COMMIT"
     fi
-    echo "==> 下载 Go 依赖"
-    go mod download
+    echo "==> 更新 gohome 等 Go 依赖"
+    go get github.com/esrrhs/gohome@latest
+    go mod tidy
     cd "$ROOT"
 fi
 
