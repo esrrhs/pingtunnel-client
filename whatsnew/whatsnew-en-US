@@ -1,3 +1,4 @@
 • Updated pingtunnel core and gohome DNS engine to the latest release
 • Support built-in direct routing presets for multiple countries (China, Iran, Russia, Turkey, Myanmar, Pakistan, Vietnam, Egypt, UAE, Saudi Arabia, India, etc.)
 • Added multilingual translations and in-app language switching in Settings
+• Added a dedicated DNS queries tab and store in connection history
