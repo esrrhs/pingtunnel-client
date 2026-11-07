@@ -425,8 +425,8 @@ fun HistoryScreen(
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text(stringResource(R.string.history_clear_title)) },
-            text = { Text(stringResource(R.string.history_clear_msg)) },
+            title = { Text(stringResource(R.string.history_clear_title, categoryName)) },
+            text = { Text(stringResource(R.string.history_clear_msg, categoryName)) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmClear = false
