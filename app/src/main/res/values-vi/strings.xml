@@ -189,8 +189,11 @@
     <string name="history_title">Lịch sử kết nối</string>
     <string name="history_empty">Chưa có lịch sử. Mọi kết nối đường hầm đều được ghi lại ở đây khi VPN được bật.</string>
     <string name="history_clear">Xóa lịch sử</string>
-    <string name="history_clear_title">Xóa lịch sử kết nối?</string>
-    <string name="history_clear_msg">Tất cả các bản ghi trên mỗi kết nối sẽ bị xóa. Cấu hình và kết nối hiện tại không bị ảnh hưởng. Điều này không thể hoàn tác được.</string>
+    <string name="history_clear_title">Xóa lịch sử %1$s?</string>
+    <string name="history_clear_msg">Toàn bộ bản ghi %1$s sẽ bị xóa. Cấu hình và kết nối hiện tại không bị ảnh hưởng. Không thể hoàn tác.</string>
+    <string name="history_category_connections">Kết nối</string>
+    <string name="history_category_dns">Truy vấn DNS</string>
+    <string name="history_empty_dns">Chưa có truy vấn DNS nào. Mọi tra cứu DNS được ghi lại đây khi VPN đang bật.</string>
     <string name="history_delete_one">Xóa bản ghi này</string>
     <string name="history_route_proxy">proxy</string>
     <string name="history_route_unknown">Không xác định</string>

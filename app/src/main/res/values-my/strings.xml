@@ -189,8 +189,11 @@
     <string name="history_title">ချိတ်ဆက်မှုမှတ်တမ်း</string>
     <string name="history_empty">သမိုင်းကြောင်း မရှိသေးပါဘူး။ VPN ကိုဖွင့်ထားစဉ် ဥမင်လိုဏ်ခေါင်းချိတ်ဆက်မှုတိုင်းကို ဤနေရာတွင် မှတ်တမ်းတင်ထားသည်။</string>
     <string name="history_clear">သမိုင်းကိုရှင်းလင်းပါ။</string>
-    <string name="history_clear_title">ချိတ်ဆက်မှုမှတ်တမ်းကို ရှင်းမလား။</string>
-    <string name="history_clear_msg">ချိတ်ဆက်မှု မှတ်တမ်းအားလုံးကို ရှင်းပါမည်။ ပရိုဖိုင်များနှင့် လက်ရှိချိတ်ဆက်မှုကို ထိခိုက်ခြင်းမရှိပါ။ ဒါကို ပြန်ပြင်လို့ မရပါဘူး။</string>
+    <string name="history_clear_title">%1$s မှတ်တမ်းကို ရှင်းမလား။</string>
+    <string name="history_clear_msg">%1$s မှတ်တမ်းအားလုံး ရှင်းလင်းမည်။ ပရိုဖိုင်များနှင့် လက်ရှိချိတ်ဆက်မှု မထိခိုက်ပါ။ နောက်ပြန်မရပါ။</string>
+    <string name="history_category_connections">ချိတ်ဆက်မှုများ</string>
+    <string name="history_category_dns">DNS မေးမြန်းမှုများ</string>
+    <string name="history_empty_dns">DNS မေးမြန်းမှု မရှိသေးပါ။ VPN ဖွင့်ထားစဉ် DNS ရှာဖွေမှုတိုင်းကို ဤနေရာတွင် မှတ်တမ်းတင်သည်။</string>
     <string name="history_delete_one">ဤမှတ်တမ်းကိုဖျက်ပါ။</string>
     <string name="history_route_proxy">ပရောက်စီ</string>
     <string name="history_route_unknown">မသိ</string>

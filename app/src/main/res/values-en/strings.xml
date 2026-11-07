@@ -216,8 +216,11 @@
     <string name="history_title">Connection history</string>
     <string name="history_empty">No history yet. Every tunneled connection is logged here while the VPN is on.</string>
     <string name="history_clear">Clear history</string>
-    <string name="history_clear_title">Clear connection history?</string>
-    <string name="history_clear_msg">All per-connection records will be cleared. Profiles and the current connection are not affected. This cannot be undone.</string>
+    <string name="history_clear_title">Clear %1$s history?</string>
+    <string name="history_clear_msg">All %1$s records will be cleared. Profiles and the current connection are unaffected. This cannot be undone.</string>
+    <string name="history_category_connections">Connections</string>
+    <string name="history_category_dns">DNS queries</string>
+    <string name="history_empty_dns">No DNS queries yet. Every DNS lookup is logged here while the VPN is on.</string>
     <string name="history_delete_one">Delete this record</string>
     <string name="history_route_proxy">Proxy</string>
     <string name="history_route_unknown">Unknown</string>

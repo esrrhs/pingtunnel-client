@@ -216,8 +216,11 @@
     <string name="history_title">连接历史</string>
     <string name="history_empty">还没有连接记录。连接 VPN 后，每条经过隧道的连接都会记录在这里。</string>
     <string name="history_clear">清空历史</string>
-    <string name="history_clear_title">清空连接历史？</string>
-    <string name="history_clear_msg">全部单连接记录将被清空，不影响配置与当前连接。此操作不可撤销。</string>
+    <string name="history_clear_title">清空%1$s历史？</string>
+    <string name="history_clear_msg">全部%1$s记录将被清空，不影响配置与当前连接。此操作不可撤销。</string>
+    <string name="history_category_connections">连接</string>
+    <string name="history_category_dns">DNS 查询</string>
+    <string name="history_empty_dns">还没有 DNS 查询记录。连接 VPN 后，每条 DNS 查询都会记录在这里。</string>
     <string name="history_delete_one">删除该记录</string>
     <string name="history_route_proxy">代理</string>
     <string name="history_route_unknown">未知</string>

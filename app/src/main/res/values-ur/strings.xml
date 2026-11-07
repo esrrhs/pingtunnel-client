@@ -189,8 +189,11 @@
     <string name="history_title">کنکشن کی تاریخ</string>
     <string name="history_empty">ابھی تک کوئی تاریخ نہیں۔ VPN آن ہونے کے دوران ہر سرنگ والا کنکشن یہاں لاگ ان ہوتا ہے۔</string>
     <string name="history_clear">تاریخ صاف کریں۔</string>
-    <string name="history_clear_title">کنکشن کی سرگزشت صاف کریں؟</string>
-    <string name="history_clear_msg">تمام فی کنکشن ریکارڈز کو صاف کر دیا جائے گا۔ پروفائلز اور موجودہ کنکشن متاثر نہیں ہوتے ہیں۔ اسے کالعدم نہیں کیا جا سکتا۔</string>
+    <string name="history_clear_title">%1$s تاریخچہ صاف کریں؟</string>
+    <string name="history_clear_msg">تمام %1$s ریکارڈ صاف ہو جائیں گے۔ پروفائلز اور موجودہ کنکشن متاثر نہیں ہوں گے۔ یہ عمل واپس نہیں ہو سکتا۔</string>
+    <string name="history_category_connections">کنکشنز</string>
+    <string name="history_category_dns">DNS استفسارات</string>
+    <string name="history_empty_dns">ابھی کوئی DNS استفسار نہیں۔ VPN آن رہنے پر ہر DNS lookup یہاں درج ہوتی ہے۔</string>
     <string name="history_delete_one">اس ریکارڈ کو حذف کریں۔</string>
     <string name="history_route_proxy">پراکسی</string>
     <string name="history_route_unknown">نامعلوم</string>

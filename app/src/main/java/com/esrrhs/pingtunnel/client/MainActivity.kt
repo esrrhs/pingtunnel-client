@@ -1,6 +1,7 @@
 package com.esrrhs.pingtunnel.client
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.VpnService
@@ -34,6 +35,7 @@ import com.esrrhs.pingtunnel.client.ui.ProfileEditorScreen
 import com.esrrhs.pingtunnel.client.ui.SettingsScreen
 import com.esrrhs.pingtunnel.client.ui.StatsScreen
 import com.esrrhs.pingtunnel.client.ui.theme.PingtunnelClientTheme
+import com.esrrhs.pingtunnel.client.util.AppLanguage
 import com.esrrhs.pingtunnel.client.util.ProfileShare
 import com.esrrhs.pingtunnel.client.util.ProfilesFile
 import com.esrrhs.pingtunnel.client.util.ValidationMessages
@@ -127,6 +129,10 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguage.wrapIfNeeded(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -172,16 +178,20 @@ class MainActivity : ComponentActivity() {
                 val connections by com.esrrhs.pingtunnel.client.util.ConnectionRecorder
                     .liveGroups.collectAsState()
                 val connectionLogs by viewModel.connectionLogs.collectAsState()
+                val dnsLogs by viewModel.dnsLogs.collectAsState()
                 val ipQueryState by viewModel.ipQuery.collectAsState()
 
                 when (screen) {
                     "logs" -> LogsScreen(onBack = { screen = "list" })
 
                     "history" -> HistoryScreen(
-                        entries = connectionLogs,
+                        connectionEntries = connectionLogs,
+                        dnsEntries = dnsLogs,
                         onBack = { screen = "list" },
                         onClear = viewModel::clearConnectionLogs,
+                        onClearDns = viewModel::clearDnsLogs,
                         onDelete = viewModel::deleteConnectionLog,
+                        onDeleteDns = viewModel::deleteDnsLog,
                     )
 
                     "connections" -> ConnectionsScreen(

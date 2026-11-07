@@ -75,13 +75,19 @@ enum class HistoryIpFilter { ALL, IPV4, IPV6 }
 enum class HistoryRouteFilter { ALL, PROXY, DIRECT }
 enum class HistoryProtoFilter { ALL, TCP, UDP }
 
+/** 历史列表的分类：业务连接与 DNS 查询分开存放、分开展示。 */
+enum class HistoryCategory { CONNECTIONS, DNS }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    entries: List<ConnectionLogEntry>,
+    connectionEntries: List<ConnectionLogEntry>,
+    dnsEntries: List<ConnectionLogEntry>,
     onBack: () -> Unit,
     onClear: () -> Unit,
+    onClearDns: () -> Unit,
     onDelete: (ConnectionLogEntry) -> Unit,
+    onDeleteDns: (ConnectionLogEntry) -> Unit,
 ) {
     // 系统 BACK 回到主界面，与顶栏返回一致；清空确认弹窗打开时由 Dialog 优先消费
     BackHandler(onBack = onBack)
@@ -91,6 +97,19 @@ fun HistoryScreen(
     var ipFilter by remember { mutableStateOf(HistoryIpFilter.ALL) }
     var routeFilter by remember { mutableStateOf(HistoryRouteFilter.ALL) }
     var protoFilter by remember { mutableStateOf(HistoryProtoFilter.ALL) }
+    var category by remember { mutableStateOf(HistoryCategory.CONNECTIONS) }
+
+    // DNS 查询单独成表：量大且与业务连接无关，混在一起会刷掉后者
+    val entries = if (category == HistoryCategory.DNS) dnsEntries else connectionEntries
+    val activeClear = if (category == HistoryCategory.DNS) onClearDns else onClear
+    val activeDelete = if (category == HistoryCategory.DNS) onDeleteDns else onDelete
+    val categoryName = stringResource(
+        if (category == HistoryCategory.DNS) {
+            R.string.history_category_dns
+        } else {
+            R.string.history_category_connections
+        },
+    )
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -164,6 +183,23 @@ fun HistoryScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    FilterChip(
+                        selected = category == HistoryCategory.CONNECTIONS,
+                        onClick = { category = HistoryCategory.CONNECTIONS },
+                        label = { Text(stringResource(R.string.history_category_connections)) },
+                    )
+                    FilterChip(
+                        selected = category == HistoryCategory.DNS,
+                        onClick = { category = HistoryCategory.DNS },
+                        label = { Text(stringResource(R.string.history_category_dns)) },
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(width = 1.dp, height = 20.dp)
+                            .background(MaterialTheme.colorScheme.outlineVariant),
+                    )
+
                     FilterChip(
                         selected = isAllSelected,
                         onClick = {
@@ -334,7 +370,13 @@ fun HistoryScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = stringResource(R.string.history_empty),
+                        text = stringResource(
+                            if (category == HistoryCategory.DNS) {
+                                R.string.history_empty_dns
+                            } else {
+                                R.string.history_empty
+                            },
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(32.dp),
@@ -373,7 +415,7 @@ fun HistoryScreen(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp),
                 ) {
                     items(filteredEntries, key = { it.key + "@" + it.startMs }) { entry ->
-                        HistoryCard(entry, nowMs, onDelete)
+                        HistoryCard(entry, nowMs, activeDelete)
                     }
                 }
             }
@@ -388,7 +430,7 @@ fun HistoryScreen(
             confirmButton = {
                 TextButton(onClick = {
                     confirmClear = false
-                    onClear()
+                    activeClear()
                 }) {
                     Text(stringResource(R.string.action_clear))
                 }

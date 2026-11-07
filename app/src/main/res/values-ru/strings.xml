@@ -189,8 +189,11 @@
     <string name="history_title">История подключений</string>
     <string name="history_empty">Истории пока нет. Здесь регистрируется каждое туннельное соединение, пока включен VPN.</string>
     <string name="history_clear">Очистить историю</string>
-    <string name="history_clear_title">Очистить историю подключений?</string>
-    <string name="history_clear_msg">Все записи для каждого соединения будут удалены. Профили и текущее соединение не затрагиваются. Это невозможно отменить.</string>
+    <string name="history_clear_title">Очистить историю «%1$s»?</string>
+    <string name="history_clear_msg">Все записи «%1$s» будут удалены. Профили и текущее соединение не пострадают. Действие необратимо.</string>
+    <string name="history_category_connections">Соединения</string>
+    <string name="history_category_dns">DNS-запросы</string>
+    <string name="history_empty_dns">Пока нет DNS-запросов. Каждый DNS-запрос записывается здесь, пока VPN включён.</string>
     <string name="history_delete_one">Удалить эту запись</string>
     <string name="history_route_proxy">Прокси</string>
     <string name="history_route_unknown">Неизвестно</string>

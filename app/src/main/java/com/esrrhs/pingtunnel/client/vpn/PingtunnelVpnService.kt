@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
@@ -26,6 +27,7 @@ import com.esrrhs.pingtunnel.client.pingtunnel.PingtunnelProcess
 import com.esrrhs.pingtunnel.client.pingtunnel.ValidationError
 import com.esrrhs.pingtunnel.client.tun.HevConfig
 import com.esrrhs.pingtunnel.client.tun.HevTunnel
+import com.esrrhs.pingtunnel.client.util.AppLanguage
 import com.esrrhs.pingtunnel.client.util.CnRouteList
 import com.esrrhs.pingtunnel.client.util.Formatters
 import com.esrrhs.pingtunnel.client.util.SocksProbe
@@ -91,6 +93,10 @@ class PingtunnelVpnService : VpnService() {
     private val rateMeter = TrafficMeter()
     private var currentProfileName: String? = null
 
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(AppLanguage.wrapIfNeeded(base))
+    }
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
@@ -129,6 +135,8 @@ class PingtunnelVpnService : VpnService() {
     private var overrideProfile: Profile? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // 渠道名只在创建时定格，切语言后不重建 Service 就一直是旧语言
+        createNotificationChannel()
         when (intent?.action) {
             ACTION_DISCONNECT -> {
                 overrideProfile = null

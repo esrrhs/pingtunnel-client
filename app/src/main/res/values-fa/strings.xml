@@ -189,8 +189,11 @@
     <string name="history_title">تاریخچه اتصال</string>
     <string name="history_empty">هنوز سابقه ندارد. وقتی VPN روشن است، هر اتصال تونل‌شده در اینجا ثبت می‌شود.</string>
     <string name="history_clear">پاک کردن تاریخچه</string>
-    <string name="history_clear_title">تاریخچه اتصال پاک شود؟</string>
-    <string name="history_clear_msg">همه سوابق هر اتصال پاک خواهند شد. نمایه ها و اتصال فعلی تحت تأثیر قرار نمی گیرند. این قابل واگرد نیست.</string>
+    <string name="history_clear_title">پاک کردن تاریخچه %1$s؟</string>
+    <string name="history_clear_msg">همهٔ رکوردهای %1$s پاک می‌شوند. پروفایل‌ها و اتصال فعلی دست‌نخورده می‌مانند. این عمل برگشت‌پذیر نیست.</string>
+    <string name="history_category_connections">اتصال‌ها</string>
+    <string name="history_category_dns">پرس‌وجوهای DNS</string>
+    <string name="history_empty_dns">هنوز پرس‌وجوی DNS ای نیست. هر جست‌وجوی DNS هنگام روشن بودن VPN اینجا ثبت می‌شود.</string>
     <string name="history_delete_one">این رکورد را حذف کنید</string>
     <string name="history_route_proxy">پروکسی</string>
     <string name="history_route_unknown">ناشناس</string>

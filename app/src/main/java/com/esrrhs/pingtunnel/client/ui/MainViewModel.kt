@@ -7,6 +7,7 @@ import com.esrrhs.pingtunnel.client.data.AppSettings
 import com.esrrhs.pingtunnel.client.data.ConfigRepository
 import com.esrrhs.pingtunnel.client.data.ConnectionLogEntry
 import com.esrrhs.pingtunnel.client.data.ConnectionLogRepository
+import com.esrrhs.pingtunnel.client.data.DnsLogRepository
 import com.esrrhs.pingtunnel.client.data.SettingsRepository
 import com.esrrhs.pingtunnel.client.pingtunnel.Profile
 import com.esrrhs.pingtunnel.client.pingtunnel.PingtunnelProcess
@@ -169,17 +170,30 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // ---- 单连接历史：采集在 Service 层全局进行（ConnectionRecorder），这里只读仓库 ----
 
     private val connectionLogRepository = ConnectionLogRepository(app)
+    private val dnsLogRepository = DnsLogRepository(app)
 
     val connectionLogs: StateFlow<List<ConnectionLogEntry>> =
         connectionLogRepository.entries
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val dnsLogs: StateFlow<List<ConnectionLogEntry>> =
+        dnsLogRepository.entries
             .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun clearConnectionLogs() {
         viewModelScope.launch { connectionLogRepository.clear() }
     }
 
+    fun clearDnsLogs() {
+        viewModelScope.launch { dnsLogRepository.clear() }
+    }
+
     fun deleteConnectionLog(entry: ConnectionLogEntry) {
         viewModelScope.launch { connectionLogRepository.delete(entry.key, entry.startMs) }
+    }
+
+    fun deleteDnsLog(entry: ConnectionLogEntry) {
+        viewModelScope.launch { dnsLogRepository.delete(entry.key, entry.startMs) }
     }
 
     private fun getLanguage(): String {

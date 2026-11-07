@@ -189,8 +189,11 @@
     <string name="history_title">Bağlantı geçmişi</string>
     <string name="history_empty">Henüz geçmişi yok. VPN açıkken her tünel bağlantısı buraya kaydedilir.</string>
     <string name="history_clear">Geçmişi temizle</string>
-    <string name="history_clear_title">Bağlantı geçmişi temizlensin mi?</string>
-    <string name="history_clear_msg">Bağlantı başına tüm kayıtlar temizlenecektir. Profiller ve mevcut bağlantı etkilenmez. Bu geri alınamaz.</string>
+    <string name="history_clear_title">%1$s geçmişi temizlensin mi?</string>
+    <string name="history_clear_msg">Tüm %1$s kayıtları temizlenecek. Profiller ve geçerli bağlantı etkilenmez. Bu işlem geri alınamaz.</string>
+    <string name="history_category_connections">Bağlantılar</string>
+    <string name="history_category_dns">DNS sorguları</string>
+    <string name="history_empty_dns">Henüz DNS sorgusu yok. VPN açıkken her DNS araması burada kaydedilir.</string>
     <string name="history_delete_one">Bu kaydı sil</string>
     <string name="history_route_proxy">vekil</string>
     <string name="history_route_unknown">Bilinmiyor</string>

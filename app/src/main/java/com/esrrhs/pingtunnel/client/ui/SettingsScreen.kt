@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -50,10 +51,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.esrrhs.pingtunnel.client.R
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.AlertDialog
 import com.esrrhs.pingtunnel.client.util.AppLanguage
 import com.esrrhs.pingtunnel.client.util.DnsRegionPreset
 import com.esrrhs.pingtunnel.client.data.AppSettings
@@ -159,7 +159,6 @@ private fun LanguageSection(
     onChange: (AppSettings) -> Unit,
 ) {
     val context = LocalContext.current
-    var expanded by remember { mutableStateOf(false) }
     val currentLang = AppLanguage.fromCode(settings.appLanguage)
 
     Column(
@@ -174,35 +173,67 @@ private fun LanguageSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp),
         )
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
-        ) {
-            OutlinedTextField(
-                value = stringResource(currentLang.titleRes),
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                    .fillMaxWidth(),
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-            ) {
-                AppLanguage.entries.forEach { lang ->
-                    DropdownMenuItem(
-                        text = { Text(stringResource(lang.titleRes)) },
-                        onClick = {
-                            onChange(settings.copy(appLanguage = lang.code))
-                            AppLanguage.applyLanguage(context, lang.code)
-                            expanded = false
-                        },
-                    )
+        OptionPicker(
+            value = stringResource(currentLang.titleRes),
+            dialogTitle = stringResource(R.string.setting_language_title),
+            options = AppLanguage.entries.map { stringResource(it.titleRes) },
+            onPick = { index ->
+                val lang = AppLanguage.entries[index]
+                onChange(settings.copy(appLanguage = lang.code))
+                AppLanguage.applyLanguage(context, lang.code)
+            },
+        )
+    }
+}
+
+/**
+ * 选项选择器：下拉浮层在 11/12 个选项时会把尾部挤出屏幕（且没有滚动条提示），
+ * 改成对话框内滚动列表，全部选项一眼可见。
+ */
+@Composable
+private fun OptionPicker(
+    value: String,
+    dialogTitle: String,
+    options: List<String>,
+    onPick: (Int) -> Unit,
+) {
+    var showOptions by remember { mutableStateOf(false) }
+
+    OutlinedButton(onClick = { showOptions = true }, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = value,
+            maxLines = 1,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+    }
+
+    if (showOptions) {
+        AlertDialog(
+            onDismissRequest = { showOptions = false },
+            title = { Text(dialogTitle) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    options.forEachIndexed { index, label ->
+                        TextButton(
+                            onClick = {
+                                onPick(index)
+                                showOptions = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(text = label)
+                        }
+                    }
                 }
-            }
-        }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showOptions = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
     }
 }
 
@@ -211,7 +242,6 @@ private fun DomainDirectSection(
     settings: AppSettings,
     onChange: (AppSettings) -> Unit,
 ) {
-    var presetExpanded by remember { mutableStateOf(false) }
     val currentPreset = DnsRegionPreset.fromCode(settings.dnsRegionPreset)
 
     ToggleRow(
@@ -237,34 +267,14 @@ private fun DomainDirectSection(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
-            ExposedDropdownMenuBox(
-                expanded = presetExpanded,
-                onExpandedChange = { presetExpanded = it },
-            ) {
-                OutlinedTextField(
-                    value = stringResource(currentPreset.titleRes),
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = presetExpanded) },
-                    modifier = Modifier
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                        .fillMaxWidth(),
-                )
-                ExposedDropdownMenu(
-                    expanded = presetExpanded,
-                    onDismissRequest = { presetExpanded = false },
-                ) {
-                    DnsRegionPreset.entries.forEach { preset ->
-                        DropdownMenuItem(
-                            text = { Text(stringResource(preset.titleRes)) },
-                            onClick = {
-                                onChange(settings.copy(dnsRegionPreset = preset.code))
-                                presetExpanded = false
-                            },
-                        )
-                    }
-                }
-            }
+            OptionPicker(
+                value = stringResource(currentPreset.titleRes),
+                dialogTitle = stringResource(R.string.setting_dns_region_title),
+                options = DnsRegionPreset.entries.map { stringResource(it.titleRes) },
+                onPick = { index ->
+                    onChange(settings.copy(dnsRegionPreset = DnsRegionPreset.entries[index].code))
+                },
+            )
         }
 
         OutlinedTextField(

@@ -14,22 +14,29 @@ private val Context.connectionLogStore by preferencesDataStore(name = "pingtunne
 /** 单连接历史持久化：最多 [MAX_ENTRIES] 条、保留 [MAX_AGE_MS]，按结束时间倒序。 */
 class ConnectionLogRepository(context: Context) {
 
-    private val store = context.applicationContext.connectionLogStore
+    private val appContext = context.applicationContext
+    private val store = appContext.connectionLogStore
     private val json = Json { ignoreUnknownKeys = true }
     private val serializer = ListSerializer(ConnectionLogEntry.serializer())
 
     val entries: Flow<List<ConnectionLogEntry>> = store.data.map { prefs ->
         pruneConnectionLogs(decode(prefs[Keys.ENTRIES_JSON]), System.currentTimeMillis())
+            .filterNot { it.isDnsQuery }
     }
 
     /** 追加已结束的记录并裁剪；同 key 的旧记录会被新记录覆盖。 */
     suspend fun append(finished: List<ConnectionLogEntry>, nowMs: Long) {
         if (finished.isEmpty()) return
+        val (dns, connections) = finished.partition { it.isDnsQuery }
+        if (dns.isNotEmpty()) {
+            DnsLogRepository(appContext).append(dns, nowMs)
+        }
+        if (connections.isEmpty()) return
         store.edit { prefs ->
             val current = decode(prefs[Keys.ENTRIES_JSON])
-            val byKey = LinkedHashMap<String, ConnectionLogEntry>(current.size + finished.size)
-            current.forEach { byKey[it.key + "@" + it.startMs] = it }
-            finished.forEach { byKey[it.key + "@" + it.startMs] = it }
+            val byKey = LinkedHashMap<String, ConnectionLogEntry>(current.size + connections.size)
+            current.filterNot { it.isDnsQuery }.forEach { byKey[it.key + "@" + it.startMs] = it }
+            connections.forEach { byKey[it.key + "@" + it.startMs] = it }
             prefs[Keys.ENTRIES_JSON] = json.encodeToString(
                 serializer,
                 pruneConnectionLogs(byKey.values, nowMs),
@@ -40,9 +47,9 @@ class ConnectionLogRepository(context: Context) {
     /** 把已有记录裁到上限并写回，避免旧数据一直占着 DataStore 内存。 */
     suspend fun compact(nowMs: Long) {
         store.edit { prefs ->
-            val current = decode(prefs[Keys.ENTRIES_JSON])
-            val pruned = pruneConnectionLogs(current, nowMs)
-            if (pruned.size != current.size) {
+            val stored = decode(prefs[Keys.ENTRIES_JSON])
+            val pruned = pruneConnectionLogs(stored.filterNot { it.isDnsQuery }, nowMs)
+            if (pruned.size != stored.size) {
                 prefs[Keys.ENTRIES_JSON] = json.encodeToString(serializer, pruned)
             }
         }
@@ -77,13 +84,15 @@ class ConnectionLogRepository(context: Context) {
     }
 }
 
-/** 最近 [ConnectionLogRepository.MAX_ENTRIES] 条，且不超过 [ConnectionLogRepository.MAX_AGE_MS]。 */
+/** 最近 [maxEntries] 条，且不超过 [maxAgeMs]；默认上限为连接历史的配置。 */
 internal fun pruneConnectionLogs(
     entries: Collection<ConnectionLogEntry>,
     nowMs: Long,
+    maxEntries: Int = ConnectionLogRepository.MAX_ENTRIES,
+    maxAgeMs: Long = ConnectionLogRepository.MAX_AGE_MS,
 ): List<ConnectionLogEntry> =
     entries.asSequence()
-        .filter { nowMs - maxOf(it.endMs, it.startMs) <= ConnectionLogRepository.MAX_AGE_MS }
+        .filter { nowMs - maxOf(it.endMs, it.startMs) <= maxAgeMs }
         .sortedByDescending { maxOf(it.endMs, it.startMs) }
-        .take(ConnectionLogRepository.MAX_ENTRIES)
+        .take(maxEntries)
         .toList()
