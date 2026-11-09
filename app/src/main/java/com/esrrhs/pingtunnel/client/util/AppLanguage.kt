@@ -56,37 +56,44 @@ enum class AppLanguage(
                 .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
         /**
-         * 供 `Activity`/`Service` 的 `attachBaseContext` 调用：API 33+ 由系统按
-         * applicationLocales 注入，直接返回原 Context；以下版本用镜像偏好覆盖
-         * Configuration（含 RTL 方向）。
+         * 供 `Activity`/`Service`/`Application` 的 `attachBaseContext` 调用：
+         * 用镜像偏好覆盖 Configuration（含 RTL 方向），确保全版本生效。
          */
         fun wrapIfNeeded(base: Context): Context {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) return base
             val tag = storedTag(base)
             if (tag.isEmpty()) return base
             val locale = Locale.forLanguageTag(tag)
+            Locale.setDefault(locale)
             val config = Configuration(base.resources.configuration)
             config.setLocale(locale)
+            config.setLayoutDirection(locale)
             return base.createConfigurationContext(config)
         }
 
         /**
-         * 应用指定的语言。API 33+ 交给 [LocaleManager]（会同步系统设置里的
-         * 「应用语言」并自动重建界面）；以下版本写入镜像偏好后重建当前界面。
+         * 应用指定的语言。
+         * API 33+ 同步给 [LocaleManager]（保持系统设置同步）；
+         * 同时写入镜像偏好并主动调用 recreate() 重建当前界面，确保所有系统版本下即时生效。
          */
         fun applyLanguage(context: Context, languageCode: String) {
             prefs(context).edit().putString(KEY_TAG, languageCode).apply()
 
+            if (languageCode.isNotEmpty()) {
+                val locale = Locale.forLanguageTag(languageCode)
+                Locale.setDefault(locale)
+            }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                val localeManager = context.getSystemService(LocaleManager::class.java)
-                if (localeManager != null) {
-                    val localeList = if (languageCode.isEmpty()) {
-                        LocaleList.getEmptyLocaleList()
-                    } else {
-                        LocaleList.forLanguageTags(languageCode)
+                runCatching {
+                    val localeManager = context.getSystemService(LocaleManager::class.java)
+                    if (localeManager != null) {
+                        val localeList = if (languageCode.isEmpty()) {
+                            LocaleList.getEmptyLocaleList()
+                        } else {
+                            LocaleList.forLanguageTags(languageCode)
+                        }
+                        localeManager.applicationLocales = localeList
                     }
-                    localeManager.applicationLocales = localeList
-                    return
                 }
             }
             findActivity(context)?.recreate()

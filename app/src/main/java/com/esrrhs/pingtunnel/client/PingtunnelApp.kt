@@ -1,6 +1,7 @@
 package com.esrrhs.pingtunnel.client
 
 import android.app.Application
+import android.content.Context
 import com.esrrhs.pingtunnel.client.data.SettingsRepository
 import com.esrrhs.pingtunnel.client.util.AppLanguage
 import com.esrrhs.pingtunnel.client.util.DirectProxySelector
@@ -15,6 +16,10 @@ import kotlinx.coroutines.launch
 class PingtunnelApp : Application() {
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(AppLanguage.wrapIfNeeded(base))
+    }
 
     override fun onCreate() {
         super.onCreate()

@@ -23,7 +23,7 @@ android {
         applicationId = "com.esrrhs.pingtunnel.client"
         minSdk = 26
         targetSdk = 37
-        versionCode = 4
+        versionCode = 5
         versionName = "0.2.0"
 
         ndk {
