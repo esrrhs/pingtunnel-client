@@ -1,4 +1,9 @@
 import java.util.Properties
+import java.io.ByteArrayOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 plugins {
     alias(libs.plugins.android.application)
@@ -6,6 +11,26 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
+
+fun gitCommitHash(dir: File): String {
+    return try {
+        val process = ProcessBuilder("git", "-C", dir.absolutePath, "rev-parse", "--short", "HEAD")
+            .redirectError(ProcessBuilder.Redirect.DISCARD)
+            .start()
+        val text = process.inputStream.bufferedReader().readText().trim()
+        process.waitFor()
+        text.ifEmpty { "unknown" }
+    } catch (_: Exception) {
+        "unknown"
+    }
+}
+
+val appGitHash = gitCommitHash(rootDir)
+val pingtunnelGitHash = gitCommitHash(file("${rootDir}/third_party/pingtunnel"))
+val hevGitHash = gitCommitHash(file("${rootDir}/third_party/hev-socks5-tunnel"))
+val buildTimeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'UTC'", Locale.US).apply {
+    timeZone = TimeZone.getTimeZone("UTC")
+}.format(Date())
 
 // Release 签名从 keystore.properties 读取（不入库）；文件缺失时产出未签名 release APK
 val keystoreProperties = Properties().apply {
@@ -23,8 +48,13 @@ android {
         applicationId = "com.esrrhs.pingtunnel.client"
         minSdk = 26
         targetSdk = 37
-        versionCode = 5
-        versionName = "0.2.0"
+        versionCode = 6
+        versionName = "0.2.1"
+
+        buildConfigField("String", "GIT_COMMIT_APP", "\"$appGitHash\"")
+        buildConfigField("String", "GIT_COMMIT_PINGTUNNEL", "\"$pingtunnelGitHash\"")
+        buildConfigField("String", "GIT_COMMIT_HEV", "\"$hevGitHash\"")
+        buildConfigField("String", "BUILD_TIME", "\"$buildTimeStr\"")
 
         ndk {
             // MVP 只保留主流 ABI，其余按需在 scripts 里加
@@ -79,6 +109,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

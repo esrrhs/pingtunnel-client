@@ -284,4 +284,11 @@
     <string name="language_vi">Tiếng Việt (Vietnamese)</string>
     <string name="language_ar">العربية (Arabic)</string>
     <string name="language_hi">हिन्दी (Hindi)</string>
+
+    <!-- 关于与版本信息 -->
+    <string name="setting_about_title">Giới thiệu &amp; Phiên bản</string>
+    <string name="about_app_version">Phiên bản ứng dụng</string>
+    <string name="about_build_time">Thời gian biên dịch</string>
+    <string name="about_core_version">Phiên bản lõi (PingTunnel)</string>
+    <string name="about_hev_version">Phiên bản hev-socks5-tunnel</string>
 </resources>

@@ -50,6 +50,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedCard
+import com.esrrhs.pingtunnel.client.BuildConfig
 import com.esrrhs.pingtunnel.client.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -116,8 +119,70 @@ fun SettingsScreen(
             DomainDirectSection(settings = settings, onChange = onChange)
             TrustedWifiSection(settings = settings, onChange = onChange)
             AlwaysOnCard()
+            AboutVersionSection()
             PrivacyPolicyRow()
         }
+    }
+}
+
+@Composable
+private fun AboutVersionSection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.setting_about_title),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        OutlinedCard(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            ),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                VersionInfoRow(
+                    label = stringResource(R.string.about_app_version),
+                    value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) · git ${BuildConfig.GIT_COMMIT_APP}",
+                )
+                VersionInfoRow(
+                    label = stringResource(R.string.about_core_version),
+                    value = "git ${BuildConfig.GIT_COMMIT_PINGTUNNEL}",
+                )
+                VersionInfoRow(
+                    label = stringResource(R.string.about_hev_version),
+                    value = "git ${BuildConfig.GIT_COMMIT_HEV}",
+                )
+                VersionInfoRow(
+                    label = stringResource(R.string.about_build_time),
+                    value = BuildConfig.BUILD_TIME,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VersionInfoRow(label: String, value: String) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 

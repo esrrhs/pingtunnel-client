@@ -322,4 +322,11 @@
     <string name="language_ar">العربية (Arabic)</string>
     <string name="language_hi">हिन्दी (Hindi)</string>
 
+
+    <!-- 关于与版本信息 -->
+    <string name="setting_about_title">About &amp; Versions</string>
+    <string name="about_app_version">App Version</string>
+    <string name="about_build_time">Build Time</string>
+    <string name="about_core_version">Core Version (PingTunnel)</string>
+    <string name="about_hev_version">hev-socks5-tunnel Version</string>
 </resources>
