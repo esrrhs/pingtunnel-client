@@ -48,8 +48,8 @@ android {
         applicationId = "com.esrrhs.pingtunnel.client"
         minSdk = 26
         targetSdk = 37
-        versionCode = 7
-        versionName = "0.3.0"
+        versionCode = 8
+        versionName = "0.3.1"
 
         buildConfigField("String", "GIT_COMMIT_APP", "\"$appGitHash\"")
         buildConfigField("String", "GIT_COMMIT_PINGTUNNEL", "\"$pingtunnelGitHash\"")

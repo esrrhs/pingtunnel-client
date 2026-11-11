@@ -578,6 +578,13 @@ private fun ProfileSheet(
                         onClick = onIp,
                         modifier = Modifier.weight(1f),
                     )
+                    SheetFunctionItem(
+                        icon = Icons.Filled.Language,
+                        labelRes = R.string.diag_browser_title,
+                        enabled = true,
+                        onClick = onBrowser,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
         }

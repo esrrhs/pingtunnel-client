@@ -766,19 +766,25 @@ private fun UnifiedWaterfallRow(
                             .offset(x = leftOffset)
                             .width(barWidth)
                     ) {
-                        val routeW = (pipeline.routeMs / d).toFloat().coerceIn(0f, 1f)
-                        val connW = (pipeline.dnsOrConnectMs / d).toFloat().coerceIn(0f, 1f)
-                        val hsW = (pipeline.handshakeMs / d).toFloat().coerceIn(0f, 1f)
-                        val waitW = (pipeline.waitFirstDataMs / d).toFloat().coerceIn(0f, 1f)
-                        val pipeW = (pipeline.dataTransferMs / d).toFloat().coerceIn(0f, 1f)
+                        val activeDuration = (pipeline.routeMs + pipeline.dnsOrConnectMs + pipeline.handshakeMs + pipeline.waitFirstDataMs + pipeline.dataTransferMs).toDouble()
+                        val safeD = if (activeDuration > 0.0) maxOf(d, activeDuration) else d
+
+                        val routeW = (pipeline.routeMs / safeD).toFloat().coerceIn(0f, 1f)
+                        val connW = (pipeline.dnsOrConnectMs / safeD).toFloat().coerceIn(0f, 1f)
+                        val hsW = (pipeline.handshakeMs / safeD).toFloat().coerceIn(0f, 1f)
+                        val waitW = (pipeline.waitFirstDataMs / safeD).toFloat().coerceIn(0f, 1f)
+                        val pipeW = (pipeline.dataTransferMs / safeD).toFloat().coerceIn(0f, 1f)
+                        val accountedW = routeW + connW + hsW + waitW + pipeW
+                        val idleW = (1f - accountedW).coerceIn(0f, 1f)
 
                         if (routeW > 0) Box(Modifier.fillMaxHeight().weight(routeW).background(ColorInternalRoute))
                         if (connW > 0) Box(Modifier.fillMaxHeight().weight(connW).background(ColorInternalTunnel))
                         if (hsW > 0) Box(Modifier.fillMaxHeight().weight(hsW).background(ColorInternalHandshake))
                         if (waitW > 0) Box(Modifier.fillMaxHeight().weight(waitW).background(ColorInternalWait))
                         if (pipeW > 0) Box(Modifier.fillMaxHeight().weight(pipeW).background(ColorInternalPipe))
+                        if (idleW > 0.02f) Box(Modifier.fillMaxHeight().weight(idleW).background(ColorOther.copy(alpha = 0.5f)))
 
-                        if (routeW <= 0 && connW <= 0 && hsW <= 0 && waitW <= 0 && pipeW <= 0) {
+                        if (routeW <= 0 && connW <= 0 && hsW <= 0 && waitW <= 0 && pipeW <= 0 && idleW <= 0.02f) {
                             Box(Modifier.fillMaxSize().background(ColorOther))
                         }
                     }
@@ -1274,19 +1280,25 @@ private fun RecordDetailDialog(
                                                 .offset(x = leftOffset)
                                                 .width(barWidth)
                                         ) {
-                                            val routeW = (pipeline.routeMs / d).toFloat().coerceIn(0f, 1f)
-                                            val connW = (pipeline.dnsOrConnectMs / d).toFloat().coerceIn(0f, 1f)
-                                            val hsW = (pipeline.handshakeMs / d).toFloat().coerceIn(0f, 1f)
-                                            val waitW = (pipeline.waitFirstDataMs / d).toFloat().coerceIn(0f, 1f)
-                                            val pipeW = (pipeline.dataTransferMs / d).toFloat().coerceIn(0f, 1f)
+                                            val activeDuration = (pipeline.routeMs + pipeline.dnsOrConnectMs + pipeline.handshakeMs + pipeline.waitFirstDataMs + pipeline.dataTransferMs).toDouble()
+                                            val safeD = if (activeDuration > 0.0) maxOf(d, activeDuration) else d
+
+                                            val routeW = (pipeline.routeMs / safeD).toFloat().coerceIn(0f, 1f)
+                                            val connW = (pipeline.dnsOrConnectMs / safeD).toFloat().coerceIn(0f, 1f)
+                                            val hsW = (pipeline.handshakeMs / safeD).toFloat().coerceIn(0f, 1f)
+                                            val waitW = (pipeline.waitFirstDataMs / safeD).toFloat().coerceIn(0f, 1f)
+                                            val pipeW = (pipeline.dataTransferMs / safeD).toFloat().coerceIn(0f, 1f)
+                                            val accountedW = routeW + connW + hsW + waitW + pipeW
+                                            val idleW = (1f - accountedW).coerceIn(0f, 1f)
 
                                             if (routeW > 0) Box(Modifier.fillMaxHeight().weight(routeW).background(ColorInternalRoute))
                                             if (connW > 0) Box(Modifier.fillMaxHeight().weight(connW).background(ColorInternalTunnel))
                                             if (hsW > 0) Box(Modifier.fillMaxHeight().weight(hsW).background(ColorInternalHandshake))
                                             if (waitW > 0) Box(Modifier.fillMaxHeight().weight(waitW).background(ColorInternalWait))
                                             if (pipeW > 0) Box(Modifier.fillMaxHeight().weight(pipeW).background(ColorInternalPipe))
+                                            if (idleW > 0.02f) Box(Modifier.fillMaxHeight().weight(idleW).background(ColorOther.copy(alpha = 0.5f)))
 
-                                            if (routeW <= 0 && connW <= 0 && hsW <= 0 && waitW <= 0 && pipeW <= 0) {
+                                            if (routeW <= 0 && connW <= 0 && hsW <= 0 && waitW <= 0 && pipeW <= 0 && idleW <= 0.02f) {
                                                 Box(Modifier.fillMaxSize().background(ColorOther))
                                             }
                                         }

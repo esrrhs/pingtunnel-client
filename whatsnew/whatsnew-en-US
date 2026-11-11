@@ -1,4 +1,3 @@
-• Added in-app Diagnosis tool for full-pipeline network and tunnel timing
+• Added Diagnosis shortcut directly inside Profile details sheet
+• Fix kernel Gantt bar proportions: calibrated phase width calculation against active transmission duration rather than idle Keep-Alive period
 • Interactive Gantt charts with 1x/2x/4x/8x zoom, timeline ruler, and active-period focus
-• High-contrast distinct colors per Gantt bar for instant phase identification
-• Detailed breakdown for UI dispatch, DNS, upstream tunnel connect, handshake, and TTFB
