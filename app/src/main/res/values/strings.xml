@@ -329,4 +329,29 @@
     <string name="about_build_time">编译时间</string>
     <string name="about_core_version">内核版本 (PingTunnel)</string>
     <string name="about_hev_version">hev-socks5-tunnel 版本</string>
+    <!-- 诊断 (时序表) -->
+    <string name="diag_browser_title">诊断</string>
+    <string name="diag_go">前往</string>
+    <string name="diag_refresh">刷新</string>
+    <string name="diag_toggle_devtools">时序明细</string>
+    <string name="diag_tab_unified">链路诊断时序</string>
+    <string name="diag_trigger_origin">出发时刻: %1$s</string>
+    <string name="diag_trigger_legend">回车出发</string>
+    <string name="diag_phase_dns">DNS 查询</string>
+    <string name="diag_phase_connect">TCP 握手</string>
+    <string name="diag_phase_ssl">SSL/TLS</string>
+    <string name="diag_phase_ttfb">等待响应 (TTFB)</string>
+    <string name="diag_phase_download">内容下载</string>
+    <string name="diag_internal_route">分流判定</string>
+    <string name="diag_internal_tunnel">上游隧道</string>
+    <string name="diag_internal_handshake">SOCKS握手</string>
+    <string name="diag_internal_wait">首包等待</string>
+    <string name="diag_internal_pipe">双向传输</string>
+    <string name="diag_empty_network">暂无诊断记录，请输入网址并访问</string>
+    <string name="diag_timing_detail_title">请求时序与内核运转明细</string>
+    <string name="diag_internal_section_title">内核代理运转链路</string>
+    <string name="diag_browser_section_title">浏览器网络时序</string>
+    <string name="diag_total_duration">总持续时间</string>
+    <string name="diag_transfer_size">传输大小</string>
+
 </resources>

@@ -291,4 +291,29 @@
     <string name="about_build_time">Derleme Zamanı</string>
     <string name="about_core_version">Çekirdek Sürümü (PingTunnel)</string>
     <string name="about_hev_version">hev-socks5-tunnel Sürümü</string>
+    <!-- 诊断 (时序表) -->
+    <string name="diag_browser_title">Diagnosis</string>
+    <string name="diag_go">Go</string>
+    <string name="diag_refresh">Refresh</string>
+    <string name="diag_toggle_devtools">Timing</string>
+    <string name="diag_trigger_origin">Triggered: %1</string>
+    <string name="diag_trigger_legend">Trigger</string>
+    <string name="diag_tab_unified">Timing</string>
+    <string name="diag_phase_dns">DNS</string>
+    <string name="diag_phase_connect">Connect</string>
+    <string name="diag_phase_ssl">SSL</string>
+    <string name="diag_phase_ttfb">TTFB</string>
+    <string name="diag_phase_download">Download</string>
+    <string name="diag_empty_network">No network requests</string>
+        <string name="diag_internal_route">Route</string>
+    <string name="diag_internal_tunnel">Tunnel</string>
+    <string name="diag_internal_handshake">Handshake</string>
+    <string name="diag_internal_wait">Wait Pkt</string>
+    <string name="diag_internal_pipe">Data Pipe</string>
+    <string name="diag_timing_detail_title">Timing Details</string>
+    <string name="diag_total_duration">Duration</string>
+    <string name="diag_transfer_size">Transfer Size</string>
+    <string name="diag_internal_section_title">Internal Pipeline</string>
+    <string name="diag_browser_section_title">Browser Timing</string>
+
 </resources>

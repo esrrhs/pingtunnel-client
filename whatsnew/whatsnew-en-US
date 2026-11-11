@@ -1,4 +1,4 @@
-• Updated pingtunnel core and gohome DNS engine to the latest release
-• Support built-in direct routing presets for multiple countries (China, Iran, Russia, Turkey, Myanmar, Pakistan, Vietnam, Egypt, UAE, Saudi Arabia, India, etc.)
-• Added multilingual translations and in-app language switching in Settings
-• Added a dedicated DNS queries tab and store in connection history
+• Added in-app Diagnosis tool for full-pipeline network and tunnel timing
+• Interactive Gantt charts with 1x/2x/4x/8x zoom, timeline ruler, and active-period focus
+• High-contrast distinct colors per Gantt bar for instant phase identification
+• Detailed breakdown for UI dispatch, DNS, upstream tunnel connect, handshake, and TTFB

@@ -24,6 +24,7 @@ import com.esrrhs.pingtunnel.client.R
 import com.esrrhs.pingtunnel.client.pingtunnel.Profile
 import com.esrrhs.pingtunnel.client.ui.AppPickerScreen
 import com.esrrhs.pingtunnel.client.ui.ConnectionsScreen
+import com.esrrhs.pingtunnel.client.ui.DiagnosticBrowserScreen
 import com.esrrhs.pingtunnel.client.ui.HistoryScreen
 import com.esrrhs.pingtunnel.client.ui.IpQueryDialog
 import com.esrrhs.pingtunnel.client.ui.LeakScreen
@@ -184,6 +185,8 @@ class MainActivity : ComponentActivity() {
                 when (screen) {
                     "logs" -> LogsScreen(onBack = { screen = "list" })
 
+                    "browser" -> DiagnosticBrowserScreen(onBack = { screen = "list" })
+
                     "history" -> HistoryScreen(
                         connectionEntries = connectionLogs,
                         dnsEntries = dnsLogs,
@@ -292,6 +295,7 @@ class MainActivity : ComponentActivity() {
                         onShowIp = viewModel::runIpQuery,
                         onShowHistory = { screen = "history" },
                         onShowLeak = { screen = "leak" },
+                        onShowBrowser = { screen = "browser" },
                         onRunCheck = viewModel::runSelfCheck,
                         onDismissCheck = viewModel::dismissSelfCheck,
                         selfCheckState = selfCheckState,

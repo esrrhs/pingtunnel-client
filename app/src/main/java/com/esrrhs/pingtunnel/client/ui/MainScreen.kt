@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lan
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -111,6 +112,7 @@ fun MainScreen(
     onShowIp: () -> Unit,
     onShowHistory: () -> Unit,
     onShowLeak: () -> Unit,
+    onShowBrowser: () -> Unit,
     onRunCheck: () -> Unit,
     onDismissCheck: () -> Unit,
     selfCheckState: SelfCheckState,
@@ -155,8 +157,9 @@ fun MainScreen(
                             onImport = onImport,
                             onExport = onExport,
                             onConnections = onShowConnections,
-                            onLogs = onShowLogs,
                             onHistory = onShowHistory,
+                            onBrowser = onShowBrowser,
+                            onLogs = onShowLogs,
                         )
                     }
                 },
@@ -253,6 +256,7 @@ fun MainScreen(
             onCheck = onRunCheck,
             onStats = onShowStats,
             onIp = onShowIp,
+            onBrowser = onShowBrowser,
         )
     }
 
@@ -270,8 +274,9 @@ private fun OverflowMenu(
     onImport: () -> Unit,
     onExport: () -> Unit,
     onConnections: () -> Unit,
-    onLogs: () -> Unit,
     onHistory: () -> Unit,
+    onBrowser: () -> Unit,
+    onLogs: () -> Unit,
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         MenuItem(Icons.Filled.FileDownload, R.string.action_import) { onImport(); onDismiss() }
@@ -279,6 +284,7 @@ private fun OverflowMenu(
         HorizontalDivider()
         MenuItem(Icons.Filled.Lan, R.string.action_connections) { onConnections(); onDismiss() }
         MenuItem(Icons.Filled.History, R.string.action_history) { onHistory(); onDismiss() }
+        MenuItem(Icons.Filled.Language, R.string.diag_browser_title) { onBrowser(); onDismiss() }
         MenuItem(Icons.Filled.Description, R.string.menu_logs) { onLogs(); onDismiss() }
     }
 }
@@ -466,6 +472,7 @@ private fun ProfileSheet(
     onCheck: () -> Unit,
     onStats: () -> Unit,
     onIp: () -> Unit,
+    onBrowser: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 

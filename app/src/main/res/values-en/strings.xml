@@ -329,4 +329,29 @@
     <string name="about_build_time">Build Time</string>
     <string name="about_core_version">Core Version (PingTunnel)</string>
     <string name="about_hev_version">hev-socks5-tunnel Version</string>
+    <!-- 诊断 (时序表) -->
+    <string name="diag_browser_title">Diagnosis</string>
+    <string name="diag_go">Go</string>
+    <string name="diag_refresh">Refresh</string>
+    <string name="diag_toggle_devtools">Timing Details</string>
+    <string name="diag_tab_unified">Diagnosis Timing</string>
+    <string name="diag_trigger_origin">Triggered: %1$s</string>
+    <string name="diag_trigger_legend">Trigger/Go</string>
+    <string name="diag_phase_dns">DNS Lookup</string>
+    <string name="diag_phase_connect">TCP Connect</string>
+    <string name="diag_phase_ssl">SSL/TLS</string>
+    <string name="diag_phase_ttfb">Waiting (TTFB)</string>
+    <string name="diag_phase_download">Download</string>
+    <string name="diag_internal_route">Routing</string>
+    <string name="diag_internal_tunnel">Tunnel Connect</string>
+    <string name="diag_internal_handshake">Handshake</string>
+    <string name="diag_internal_wait">Wait First Pkt</string>
+    <string name="diag_internal_pipe">Data Transfer</string>
+    <string name="diag_empty_network">No requests yet. Enter a URL to test.</string>
+    <string name="diag_timing_detail_title">Timing &amp; Internal Pipeline Details</string>
+    <string name="diag_internal_section_title">App Internal Proxy Pipeline</string>
+    <string name="diag_browser_section_title">Browser Network Timing</string>
+    <string name="diag_total_duration">Total Duration</string>
+    <string name="diag_transfer_size">Transfer Size</string>
+
 </resources>

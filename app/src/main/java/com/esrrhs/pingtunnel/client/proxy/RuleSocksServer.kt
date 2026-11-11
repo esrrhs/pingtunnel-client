@@ -259,30 +259,127 @@ class RuleSocksServer(
         out: OutputStream,
         client: Socket,
     ) {
-        val ruleDirect = shouldDirect(req.host, req.atyp)
         val started = System.currentTimeMillis()
+        var timing = InternalPipelineTiming(
+            host = req.host,
+            port = req.port,
+            isDirect = false,
+            startTimeMs = started,
+            status = "CONNECTING",
+        )
+        ProxyEventBus.updatePipeline(timing)
+        // 记录 Sonny 子连接建立请求 (从 App 收到 SOCKS5 CONNECT)
+        ProxyEventBus.recordPacket(
+            timing.id,
+            PacketEvent(
+                timestampMs = started,
+                channel = "SONNY",
+                isUpload = true,
+                frameType = "OPEN",
+                sizeBytes = req.raw.size,
+                detail = "App SOCKS5 CONNECT received (target: ${req.host}:${req.port})"
+            )
+        )
+
+        val routeStart = System.currentTimeMillis()
+        val ruleDirect = shouldDirect(req.host, req.atyp)
+        val routeDuration = (System.currentTimeMillis() - routeStart).coerceAtLeast(0L)
+        timing = timing.copy(
+            isDirect = ruleDirect,
+            routeMs = routeDuration,
+        )
+        ProxyEventBus.updatePipeline(timing)
+
+        ProxyEventBus.logTrace(
+            stage = "ROUTE",
+            host = req.host,
+            port = req.port,
+            detail = "Received CONNECT request. Decision: ${if (ruleDirect) "DIRECT" else "PROXY"} (${routeDuration}ms)"
+        )
 
         val inDirectPenalty = ruleDirect && isDirectPenalized(req.host)
         var directFailReason: String? = null
         var target: Socket? = null
+        val connStart = System.currentTimeMillis()
+
         if (ruleDirect && !inDirectPenalty) {
+            ProxyEventBus.logTrace("DIRECT", req.host, req.port, "Resolving DNS and opening direct socket...")
             try {
                 target = openConnected(req.host, req.port)
+                val directConnMs = (System.currentTimeMillis() - connStart).coerceAtLeast(0L)
+                timing = timing.copy(dnsOrConnectMs = directConnMs)
+                ProxyEventBus.updatePipeline(timing)
+                ProxyEventBus.logTrace("DIRECT", req.host, req.port, "Direct connection established in ${directConnMs}ms")
             } catch (e: Exception) {
                 directFailReason = e.message ?: e.javaClass.simpleName
                 markDirectPenalized(req.host)
+                ProxyEventBus.logTrace("DIRECT", req.host, req.port, "Direct failed ($directFailReason), fallback to proxy", isError = true)
                 Log.i(TAG, "direct ${req.host}:${req.port} failed, penalized for ${DIRECT_PENALTY_MS / 1000}s, fallback to proxy: $directFailReason")
             }
         } else if (inDirectPenalty) {
             directFailReason = "penalized (previous direct failed)"
+            ProxyEventBus.logTrace("ROUTE", req.host, req.port, "Direct is penalized, fallback to proxy")
         }
         val usedDirect = target != null
 
         if (target == null) {
+            timing = timing.copy(isDirect = false)
+            ProxyEventBus.logTrace("UPSTREAM", req.host, req.port, "Forwarding CONNECT to Pingtunnel/Socks upstream...")
+            val upstreamStart = System.currentTimeMillis()
+            // 记录 Main 隧道上的 OPEN 帧发送
+            ProxyEventBus.recordPacket(
+                timing.id,
+                PacketEvent(
+                    timestampMs = upstreamStart,
+                    channel = "MAIN",
+                    isUpload = true,
+                    frameType = "OPEN",
+                    sizeBytes = req.raw.size,
+                    detail = "Send OPEN frame to SPP father tunnel (target: ${req.host}:${req.port})"
+                )
+            )
             target = try {
-                connectUpstream(req)
+                val sock = connectUpstream(req)
+                val upstreamMs = (System.currentTimeMillis() - upstreamStart).coerceAtLeast(0L)
+                val openRspTime = System.currentTimeMillis()
+                // 记录 Main 隧道上的 OPENRSP 响应
+                ProxyEventBus.recordPacket(
+                    timing.id,
+                    PacketEvent(
+                        timestampMs = openRspTime,
+                        channel = "MAIN",
+                        isUpload = false,
+                        frameType = "OPENRSP",
+                        sizeBytes = 10,
+                        detail = "Received OPENRSP frame (success=true, latency=${upstreamMs}ms)"
+                    )
+                )
+                timing = timing.copy(dnsOrConnectMs = upstreamMs)
+                ProxyEventBus.updatePipeline(timing)
+                ProxyEventBus.logTrace("UPSTREAM", req.host, req.port, "Upstream tunnel CONNECT success in ${upstreamMs}ms")
+                sock
             } catch (e: Exception) {
                 val reason = e.message ?: e.javaClass.simpleName
+                val upstreamMs = (System.currentTimeMillis() - upstreamStart).coerceAtLeast(0L)
+                ProxyEventBus.recordPacket(
+                    timing.id,
+                    PacketEvent(
+                        timestampMs = System.currentTimeMillis(),
+                        channel = "MAIN",
+                        isUpload = false,
+                        frameType = "OPENRSP",
+                        sizeBytes = 0,
+                        detail = "Received OPENRSP failed ($reason)"
+                    )
+                )
+                timing = timing.copy(
+                    dnsOrConnectMs = upstreamMs,
+                    totalDurationMs = System.currentTimeMillis() - started,
+                    status = "ERROR",
+                    errorReason = reason,
+                )
+                ProxyEventBus.updatePipeline(timing)
+                ProxyEventBus.logTrace("UPSTREAM", req.host, req.port, "Upstream CONNECT failed: $reason", isError = true)
                 Log.w(TAG, "connect ${req.host}:${req.port} (direct=$ruleDirect) failed: $reason")
                 recordEvent(
                     req,
@@ -308,18 +405,45 @@ class RuleSocksServer(
             directFailReason?.let { "direct failed -> proxy ($it)" },
             started,
         )
+        val handshakeStart = System.currentTimeMillis()
+        // 记录 Sonny 子连接握手应答
+        ProxyEventBus.recordPacket(
+            timing.id,
+            PacketEvent(
+                timestampMs = handshakeStart,
+                channel = "SONNY",
+                isUpload = false,
+                frameType = "OPENRSP",
+                sizeBytes = 10,
+                detail = "SOCKS5 CONNECT success replied to App"
+            )
+        )
         try {
             out.write(Socks5Codec.successReply("0.0.0.0", 0))
             out.flush()
+            val handshakeMs = (System.currentTimeMillis() - handshakeStart).coerceAtLeast(0L)
+            timing = timing.copy(
+                handshakeMs = handshakeMs,
+                status = "ACTIVE",
+            )
+            ProxyEventBus.updatePipeline(timing)
+            ProxyEventBus.logTrace("HANDSHAKE", req.host, req.port, "Replied SUCCESS to client in ${handshakeMs}ms. Starting bidirectional data piping.")
         } catch (e: Exception) {
             // 客户端可能在我们建连期间已经 RST 走人：target 已连接成功，
             // 不关掉就是永久 fd 泄漏（handleClient 的 finally 只关 client）。
+            timing = timing.copy(
+                totalDurationMs = System.currentTimeMillis() - started,
+                status = "ERROR",
+                errorReason = "Client disconnected: ${e.message}",
+            )
+            ProxyEventBus.updatePipeline(timing)
+            ProxyEventBus.logTrace("HANDSHAKE", req.host, req.port, "Client disconnected before reply: ${e.message}", isError = true)
             Log.v(TAG, "client gone before CONNECT reply, closing target: ${e.message}")
             runCatching { target.close() }
             return
         }
         client.soTimeout = 0 // 进入双向转发：copyDirection 的读必须无限阻塞
-        awaitPipe(client, target)
+        awaitPipe(client, target, timing)
     }
 
     /**
@@ -392,16 +516,20 @@ class RuleSocksServer(
     private fun connectUpstream(req: Socks5Codec.Request): Socket {
         var socket = acquireUpstream()
         try {
+            ProxyEventBus.logTrace("UPSTREAM", req.host, req.port, "Sending SOCKS5 CONNECT to upstream server...")
             val upOut = socket.getOutputStream()
             val upIn = DataInputStream(socket.getInputStream())
             upOut.write(req.raw)
             upOut.flush()
+            ProxyEventBus.logTrace("UPSTREAM", req.host, req.port, "Waiting for upstream SOCKS5 CONNECT reply...")
             if (Socks5Codec.readReply(upIn) == null) {
                 throw java.io.IOException("upstream CONNECT rejected/timeout")
             }
+            ProxyEventBus.logTrace("UPSTREAM", req.host, req.port, "Upstream replied SUCCESS")
             socket.soTimeout = 0 // 进入长连接中继：copyDirection 的读必须无限阻塞
             return socket
         } catch (e: Exception) {
+            ProxyEventBus.logTrace("UPSTREAM", req.host, req.port, "Re-connecting upstream (previous connection closed/timeout: ${e.message})")
             runCatching { socket.close() }
             // 预热连接可能已被服务器因空闲超时断开，重试一次新建连
             socket = openUpstream()
@@ -413,6 +541,7 @@ class RuleSocksServer(
                 runCatching { socket.close() }
                 throw java.io.IOException("upstream CONNECT rejected/timeout")
             }
+            ProxyEventBus.logTrace("UPSTREAM", req.host, req.port, "Upstream retry replied SUCCESS")
             socket.soTimeout = 0 // 同上：长连接中继阶段取消握手读预算
             return socket
         }
@@ -425,7 +554,7 @@ class RuleSocksServer(
      * 但保留反向继续传输的能力（严格兼容 HTTP/2 和 gRPC 双向流）。
      * 当双向转发全部完成，或者发生底层异常时，统一关闭两端 Socket。
      */
-    private fun awaitPipe(a: Socket, b: Socket) {
+    private fun awaitPipe(a: Socket, b: Socket, initialTiming: InternalPipelineTiming) {
         runCatching {
             a.sendBufferSize = TCP_SOCKET_BUFFER
             a.receiveBufferSize = TCP_SOCKET_BUFFER
@@ -433,23 +562,98 @@ class RuleSocksServer(
             b.receiveBufferSize = TCP_SOCKET_BUFFER
         }
         val latch = java.util.concurrent.CountDownLatch(2)
+        val pipeStart = System.currentTimeMillis()
+        val uploadBytes = java.util.concurrent.atomic.AtomicLong(0L)
+        val downloadBytes = java.util.concurrent.atomic.AtomicLong(0L)
+        val firstDataTime = java.util.concurrent.atomic.AtomicLong(0L)
 
-        val forwardDirection = { from: Socket, to: Socket ->
+        val forwardDirection = { from: Socket, to: Socket, isUpload: Boolean ->
+            var totalBytes = 0L
             try {
-                copyDirection(from, to)
+                totalBytes = copyDirectionCounting(from, to) { chunkBytes ->
+                    if (firstDataTime.compareAndSet(0L, System.currentTimeMillis())) {
+                        val waitFirstMs = (System.currentTimeMillis() - pipeStart).coerceAtLeast(0L)
+                        ProxyEventBus.updatePipeline(
+                            initialTiming.copy(
+                                waitFirstDataMs = waitFirstMs,
+                                status = "TRANSFERRING",
+                            )
+                        )
+                    }
+                    // 记录 Sonny 子连接收发包与 Main 隧道通道对应的数据帧事件
+                    val now = System.currentTimeMillis()
+                    // 1. Sonny 子连接的本地应用读写包
+                    ProxyEventBus.recordPacket(
+                        initialTiming.id,
+                        PacketEvent(
+                            timestampMs = now,
+                            channel = "SONNY",
+                            isUpload = isUpload,
+                            frameType = "DATA",
+                            sizeBytes = chunkBytes,
+                            detail = if (isUpload) "Sonny recv $chunkBytes B from App" else "Sonny send $chunkBytes B to App"
+                        )
+                    )
+                    // 2. 对应转发到 Main 物理隧道上的多路复用帧
+                    ProxyEventBus.recordPacket(
+                        initialTiming.id,
+                        PacketEvent(
+                            timestampMs = now + 1,
+                            channel = "MAIN",
+                            isUpload = isUpload,
+                            frameType = "DATA",
+                            sizeBytes = chunkBytes,
+                            detail = if (isUpload) "Main tunnel push DATA frame ($chunkBytes B)" else "Main tunnel dispatch DATA frame ($chunkBytes B)"
+                        )
+                    )
+                }
             } finally {
+                if (isUpload) {
+                    uploadBytes.set(totalBytes)
+                } else {
+                    downloadBytes.set(totalBytes)
+                }
                 // 该方向读取结束，通知目标端此方向已无新数据 (发送 TCP FIN)
                 runCatching {
                     if (!to.isClosed && !to.isOutputShutdown) {
                         to.shutdownOutput()
                     }
                 }
+                val finNow = System.currentTimeMillis()
+                ProxyEventBus.recordPacket(
+                    initialTiming.id,
+                    PacketEvent(
+                        timestampMs = finNow,
+                        channel = "SONNY",
+                        isUpload = isUpload,
+                        frameType = "CLOSE",
+                        sizeBytes = 0,
+                        detail = if (isUpload) "App TCP FIN received" else "TCP FIN sent to App"
+                    )
+                )
+                ProxyEventBus.recordPacket(
+                    initialTiming.id,
+                    PacketEvent(
+                        timestampMs = finNow + 1,
+                        channel = "MAIN",
+                        isUpload = isUpload,
+                        frameType = "CLOSE",
+                        sizeBytes = 0,
+                        detail = if (isUpload) "Main tunnel sent CLOSE frame" else "Main tunnel received CLOSE frame"
+                    )
+                )
+                ProxyEventBus.logTrace(
+                    stage = "DATA",
+                    host = initialTiming.host,
+                    port = initialTiming.port,
+                    detail = if (isUpload) "Upload FIN: $totalBytes bytes sent" else "Download FIN: $totalBytes bytes received"
+                )
                 latch.countDown()
             }
         }
 
-        pool.execute { forwardDirection(a, b) }
-        pool.execute { forwardDirection(b, a) }
+        pool.execute { forwardDirection(a, b, true) }
+        pool.execute { forwardDirection(b, a, false) }
 
         // 等待两个单向通道全部完成（或异常退出）
         try {
@@ -459,7 +663,46 @@ class RuleSocksServer(
         } finally {
             runCatching { a.close() }
             runCatching { b.close() }
+            val now = System.currentTimeMillis()
+            val totalMs = now - initialTiming.startTimeMs
+            val transferMs = (now - pipeStart).coerceAtLeast(0L)
+            val waitMs = if (firstDataTime.get() > 0L) (firstDataTime.get() - pipeStart).coerceAtLeast(0L) else transferMs
+            val pureDataMs = (transferMs - waitMs).coerceAtLeast(0L)
+
+            ProxyEventBus.updatePipeline(
+                initialTiming.copy(
+                    waitFirstDataMs = waitMs,
+                    dataTransferMs = pureDataMs,
+                    totalDurationMs = totalMs,
+                    uploadBytes = uploadBytes.get(),
+                    downloadBytes = downloadBytes.get(),
+                    status = "CLOSED",
+                )
+            )
+            ProxyEventBus.logTrace("CLOSE", initialTiming.host, initialTiming.port, "Connection closed. Duration: ${totalMs}ms, ↑${uploadBytes.get()}B ↓${downloadBytes.get()}B")
         }
+    }
+
+    private fun copyDirectionCounting(from: Socket, to: Socket, onChunkRead: ((Int) -> Unit)? = null): Long {
+        var count = 0L
+        try {
+            val buf = ByteArray(BUFFER_SIZE)
+            val input = from.getInputStream()
+            val out = to.getOutputStream()
+            while (running.get() && !from.isClosed && !to.isClosed) {
+                val n = input.read(buf)
+                if (n < 0) break // 读到 EOF
+                if (n > 0) {
+                    onChunkRead?.invoke(n)
+                }
+                out.write(buf, 0, n)
+                out.flush()
+                count += n
+            }
+        } catch (_: Exception) {
+            // 连接断开或重置
+        }
+        return count
     }
 
     private fun recordEvent(
@@ -488,6 +731,7 @@ class RuleSocksServer(
      */
     private fun openConnected(host: String, port: Int): Socket {
         val addresses = resolveHost(host)
+        ProxyEventBus.logTrace("DNS", host, port, "Resolved ${addresses.size} address(es): ${addresses.joinToString { it.hostAddress ?: "" }}")
         if (addresses.isEmpty()) {
             throw java.net.UnknownHostException(host)
         }
