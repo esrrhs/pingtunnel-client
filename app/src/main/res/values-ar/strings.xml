@@ -55,6 +55,7 @@
     <string name="toast_invalid_qr">رمز QR ليس ملف تعريف pingtunnel صالحًا</string>
     <string name="toast_imported">الملف الشخصي الذي تم استيراده: %1$s</string>
     <string name="toast_bad_link">الرابط ليس ملفًا شخصيًا صالحًا لـ pingtunnel</string>
+    <string name="toast_clipboard_empty">لم يتم العثور على رابط ملف pingtunnel في الحافظة</string>
     <string name="toast_exported">الملفات الشخصية التي تم تصديرها إلى %1$d</string>
     <string name="toast_export_failed">فشل التصدير: %1$s</string>
     <string name="toast_import_empty">لم يتم العثور على ملفات تعريف صالحة في الملف</string>
@@ -77,6 +78,7 @@
     <string name="state_paused">متوقف مؤقتًا (شبكة موثوقة)</string>
     <string name="state_error">خطأ</string>
     <string name="action_add_profile">إضافة الملف الشخصي</string>
+    <string name="action_from_clipboard">من الحافظة</string>
     <string name="empty_profiles_short">لم يتم تحديد أي ملف تعريف</string>
     <string name="sheet_choose_profile">اختر الملف الشخصي</string>
     <string name="ping_untested">لم يتم اختباره</string>

@@ -63,6 +63,7 @@
     <string name="toast_invalid_qr">二维码内容不是有效的 pingtunnel 配置</string>
     <string name="toast_imported">已导入配置：%1$s</string>
     <string name="toast_bad_link">链接内容不是有效的 pingtunnel 配置</string>
+    <string name="toast_clipboard_empty">剪贴板中没有 pingtunnel 配置链接</string>
     <string name="toast_exported">已导出 %1$d 个配置</string>
     <string name="toast_export_failed">导出失败：%1$s</string>
     <string name="toast_import_empty">文件中没有有效配置</string>
@@ -88,6 +89,7 @@
     <string name="state_paused">已暂停（可信网络）</string>
     <string name="state_error">错误</string>
     <string name="action_add_profile">添加配置</string>
+    <string name="action_from_clipboard">从剪贴板</string>
     <string name="empty_profiles_short">未选择配置</string>
     <string name="sheet_choose_profile">选择配置</string>
     <string name="ping_untested">未测</string>

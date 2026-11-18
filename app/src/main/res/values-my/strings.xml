@@ -55,6 +55,7 @@
     <string name="toast_invalid_qr">QR ကုဒ်သည် မှန်ကန်သော pingtunnel ပရိုဖိုင်မဟုတ်ပါ။</string>
     <string name="toast_imported">ပရိုဖိုင်ကို ထည့်သွင်းထားသည်- %1$s</string>
     <string name="toast_bad_link">လင့်ခ်သည် မှန်ကန်သော pingtunnel ပရိုဖိုင်မဟုတ်ပါ။</string>
+    <string name="toast_clipboard_empty">ကလစ်ဘုတ်တွင် pingtunnel ပရိုဖိုင်လင့်ခ် မတွေ့ပါ။</string>
     <string name="toast_exported">%1$d ပရိုဖိုင်(များ) ကို ထုတ်ယူခဲ့သည်</string>
     <string name="toast_export_failed">ထုတ်ယူမှု မအောင်မြင်ပါ- %1$s</string>
     <string name="toast_import_empty">ဖိုင်ထဲတွင် မှန်ကန်သော ပရိုဖိုင်များ မတွေ့ပါ။</string>
@@ -77,6 +78,7 @@
     <string name="state_paused">ခေတ္တရပ်ထားသည် (ယုံကြည်ရသော ကွန်ရက်)</string>
     <string name="state_error">အမှား</string>
     <string name="action_add_profile">ပရိုဖိုင်ထည့်ပါ။</string>
+    <string name="action_from_clipboard">ကလစ်ဘုတ်မှ</string>
     <string name="empty_profiles_short">ပရိုဖိုင်ကို ရွေးထားခြင်းမရှိပါ။</string>
     <string name="sheet_choose_profile">ပရိုဖိုင်ကို ရွေးပါ။</string>
     <string name="ping_untested">မစမ်းသပ်ထားပါဘူး။</string>

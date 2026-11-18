@@ -55,6 +55,7 @@
     <string name="toast_invalid_qr">Код QR не является допустимым профилем pingtunnel.</string>
     <string name="toast_imported">Импортирован профиль: %1$s.</string>
     <string name="toast_bad_link">Ссылка не является действительным профилем pingtunnel.</string>
+    <string name="toast_clipboard_empty">В буфере обмена нет ссылки на профиль pingtunnel.</string>
     <string name="toast_exported">Экспортировано профилей %1$d.</string>
     <string name="toast_export_failed">Не удалось экспортировать: %1$s</string>
     <string name="toast_import_empty">В файле не найдено действительных профилей</string>
@@ -77,6 +78,7 @@
     <string name="state_paused">Приостановлено (доверенная сеть)</string>
     <string name="state_error">Ошибка</string>
     <string name="action_add_profile">Добавить профиль</string>
+    <string name="action_from_clipboard">Из буфера обмена</string>
     <string name="empty_profiles_short">Профиль не выбран</string>
     <string name="sheet_choose_profile">Выбрать профиль</string>
     <string name="ping_untested">Не проверено</string>

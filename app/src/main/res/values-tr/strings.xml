@@ -55,6 +55,7 @@
     <string name="toast_invalid_qr">QR kodu geçerli bir pingtunnel profili değil</string>
     <string name="toast_imported">Profil içe aktarıldı: %1$s</string>
     <string name="toast_bad_link">Bağlantı geçerli bir pingtunnel profili değil</string>
+    <string name="toast_clipboard_empty">Panoda pingtunnel profil bağlantısı bulunamadı</string>
     <string name="toast_exported">%1$d profilleri dışa aktarıldı</string>
     <string name="toast_export_failed">Dışa aktarma başarısız oldu: %1$s</string>
     <string name="toast_import_empty">Dosyada geçerli profil bulunamadı</string>
@@ -77,6 +78,7 @@
     <string name="state_paused">Duraklatıldı (güvenilir ağ)</string>
     <string name="state_error">Hata</string>
     <string name="action_add_profile">Profil ekle</string>
+    <string name="action_from_clipboard">Panodan</string>
     <string name="empty_profiles_short">Profil seçilmedi</string>
     <string name="sheet_choose_profile">Profil seç</string>
     <string name="ping_untested">Test edilmedi</string>
