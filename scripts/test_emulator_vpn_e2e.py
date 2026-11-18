@@ -35,6 +35,15 @@ import threading
 import time
 import zipfile
 
+PKG = "com.esrrhs.pingtunnel.client.debug"
+PKG_RE = re.escape(PKG)
+APP_NAMESPACE = "com.esrrhs.pingtunnel.client"
+MAIN_ACTIVITY = f"{PKG}/{APP_NAMESPACE}.MainActivity"
+VPN_SERVICE = f"{PKG}/{APP_NAMESPACE}.vpn.PingtunnelVpnService"
+ACTION_CONNECT = APP_NAMESPACE + ".action.CONNECT"
+ACTION_DISCONNECT = APP_NAMESPACE + ".action.DISCONNECT"
+EXTRA_PROFILE_JSON = APP_NAMESPACE + ".extra.PROFILE_JSON"
+
 # CI 日志按行刷出，避免进程退出前才一次性吐出全部输出。
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(line_buffering=True)
@@ -71,14 +80,13 @@ def run_adb(adb_cmd, serial, args, check=True, timeout=30):
 
 def grant_vpn_consent(adb, serial):
     """预授权 VPN。必须在应用安装之后调用，且命令必须真正在设备上执行。"""
-    pkg = "com.esrrhs.pingtunnel.client"
     run_adb(adb, serial, [
-        "shell", "pm", "grant", pkg, "android.permission.POST_NOTIFICATIONS",
+        "shell", "pm", "grant", PKG, "android.permission.POST_NOTIFICATIONS",
     ], check=False)
     for op in ("ACTIVATE_VPN", "ACTIVATE_PLATFORM_VPN"):
-        run_adb(adb, serial, ["shell", "appops", "set", pkg, op, "allow"], check=False)
-        run_adb(adb, serial, ["shell", "appops", "set", "--uid", pkg, op, "allow"], check=False)
-        got = run_adb(adb, serial, ["shell", "appops", "get", pkg, op], check=False)
+        run_adb(adb, serial, ["shell", "appops", "set", PKG, op, "allow"], check=False)
+        run_adb(adb, serial, ["shell", "appops", "set", "--uid", PKG, op, "allow"], check=False)
+        got = run_adb(adb, serial, ["shell", "appops", "get", PKG, op], check=False)
         text = ((got.stdout or "") + (got.stderr or "")).strip()
         print(f"==> appops {op}: {text or '(无输出)'}")
         if "allow" not in text:
@@ -116,10 +124,8 @@ def assert_native_libs(apk_path):
 def start_vpn_service(adb, serial, action, profile_json=None):
     args = ["shell", "am", "start-foreground-service", "-a", action]
     if profile_json is not None:
-        args.extend([
-            "--es", "com.esrrhs.pingtunnel.client.extra.PROFILE_JSON", f"'{profile_json}'",
-        ])
-    args.extend(["-n", "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"])
+        args.extend(["--es", EXTRA_PROFILE_JSON, f"'{profile_json}'"])
+    args.extend(["-n", VPN_SERVICE])
     res = run_adb(adb, serial, args, check=False)
     out = ((res.stdout or "") + (res.stderr or "")).strip()
     print(f"==> am exit={res.returncode} {out}")
@@ -813,13 +819,13 @@ def read_connectivity(adb, serial):
 
 def assert_underlying_network_alive(text):
     """VPN 声明的底层网络必须还活着；没钉死则表示交给系统默认网络。"""
-    if "VPN:com.esrrhs.pingtunnel.client" not in text:
+    if "VPN:" + PKG not in text:
         # 切网重建后 ConnectivityService 重新注册 VPN 网络存在短暂窗口；
         # 由调用方在行为验证（TCP 穿透）成功后重试，避免快照时序误判。
         raise VpnNetworkNotVisible()
     live = set(re.findall(r"NetworkAgentInfo\{network\{(\d+)\}", text))
     match = re.search(
-        r"VPN:com\.esrrhs\.pingtunnel\.client.*?underlying\{\[([^\]]*)\]\}",
+        "VPN:" + PKG_RE + r".*?underlying\{\[([^\]]*)\]\}",
         text,
     )
     if not match:
@@ -1151,9 +1157,9 @@ def assert_tun_default_routes(adb_cmd, serial, expect_ipv6=False):
     """
     dump = read_connectivity(adb_cmd, serial)
     v4_ok = v6_ok = False
-    if "VPN:com.esrrhs.pingtunnel.client" in dump:
+    if "VPN:" + PKG in dump:
         # VPN 网络块的 LinkProperties（取标记后一段，避免扫到无关网络）
-        block = dump.split("VPN:com.esrrhs.pingtunnel.client", 1)[1][:8000]
+        block = dump.split("VPN:" + PKG, 1)[1][:8000]
         v4_ok = "0.0.0.0/0" in block
         v6_ok = "::/0" in block
 
@@ -1304,9 +1310,8 @@ def direct_kernel_icmp_check(adb, serial, guest_ip, password=E2E_SERVER_PASSWORD
     下一条都不会出现）。门禁仍要求至少 3 条真实 pong，所以这里显式打开
     debug；-nolog 在 v3.1 已是布尔开关，不能再写成「-nolog 1」。
     """
-    pkg = "com.esrrhs.pingtunnel.client"
     abi = detect_abi(adb, serial)
-    base = run_adb(adb, serial, ["shell", "pm", "path", pkg]).stdout.strip().splitlines()[0]
+    base = run_adb(adb, serial, ["shell", "pm", "path", PKG]).stdout.strip().splitlines()[0]
     base = base.removeprefix("package:").strip()
     # lib 目录两种布局都可能出现：base.apk 同级 / 上级（多 ABI 时在各 <abi> 子目录）
     candidates = [
@@ -1318,13 +1323,13 @@ def direct_kernel_icmp_check(adb, serial, guest_ip, password=E2E_SERVER_PASSWORD
                                 check=False).stdout.strip() == "ok"), None)
     if not bin_path:
         raise RuntimeError(f"找不到可执行内核，候选：{candidates}")
-    run_adb(adb, serial, ["shell", f"run-as {pkg} sh -c 'cd files && rm -f direct.log'"], check=False)
+    run_adb(adb, serial, ["shell", f"run-as {PKG} sh -c 'cd files && rm -f direct.log'"], check=False)
     # fire-and-forget：run-as 场景下 adb shell 即使重定向了 std* 仍可能不返回
     # （管道由 run-as/sh 链路持有），超时按预期处理，判定只靠轮询 direct.log
     try:
         run_adb(adb, serial, [
             "shell",
-            f"run-as {pkg} sh -c 'cd files && setsid {bin_path} -type client -l 127.0.0.1:10800"
+            f"run-as {PKG} sh -c 'cd files && setsid {bin_path} -type client -l 127.0.0.1:10800"
             f" -s {guest_ip} -socks5 -password {password} -nolog -loglevel debug"
             f" > direct.log 2>&1 < /dev/null &'",
         ], check=False, timeout=15)
@@ -1334,11 +1339,11 @@ def direct_kernel_icmp_check(adb, serial, guest_ip, password=E2E_SERVER_PASSWORD
     pongs = 0
     while time.time() < deadline and pongs < 3:
         time.sleep(3)
-        out = run_adb(adb, serial, ["shell", f"run-as {pkg} cat files/direct.log"], check=False).stdout or ""
+        out = run_adb(adb, serial, ["shell", f"run-as {PKG} cat files/direct.log"], check=False).stdout or ""
         pongs = out.count("pong from")
     run_adb(adb, serial, ["shell", "pkill -f '[l]ibpingtunnel.so -type client'"], check=False)
     if pongs < 3:
-        log = run_adb(adb, serial, ["shell", f"run-as {pkg} cat files/direct.log"], check=False).stdout or ""
+        log = run_adb(adb, serial, ["shell", f"run-as {PKG} cat files/direct.log"], check=False).stdout or ""
         pings = log.count("ping ")
         raise RuntimeError(
             f"无 VPN 直连内核未收到足够 pong（{pongs}/3，可见 ping {pings}），免 root ICMP 收发异常。"
@@ -1646,15 +1651,11 @@ def main():
     # 3. 授权 VPN 权限并前台激活应用
     print("==> 预授予 VPN 权限...")
     grant_vpn_consent(adb, serial)
-    run_adb(adb, serial, ["shell", "am", "start", "-n", "com.esrrhs.pingtunnel.client/.MainActivity"], check=False)
+    run_adb(adb, serial, ["shell", "am", "start", "-n", MAIN_ACTIVITY], check=False)
     time.sleep(1)
 
     # 先断开可能残留的 VPN
-    run_adb(adb, serial, [
-        "shell", "am", "start-foreground-service",
-        "-a", "com.esrrhs.pingtunnel.client.action.DISCONNECT",
-        "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"
-    ], check=False)
+    run_adb(adb, serial, ["shell", "am", "start-foreground-service", "-a", ACTION_DISCONNECT, VPN_SERVICE], check=False)
     wait_for_tun(adb, serial, should_exist=False, timeout=5)
 
     host_lan_ip = get_host_lan_ip()
@@ -1730,7 +1731,7 @@ def main():
         profile_json = json.dumps(pingtunnel_profile)
         def connect_and_wait():
             print("==> 发送 pingtunnel CONNECT 意图...")
-            start_vpn_service(adb, serial, "com.esrrhs.pingtunnel.client.action.CONNECT", profile_json)
+            start_vpn_service(adb, serial, ACTION_CONNECT, profile_json)
             print("==> 等待 tun0 网卡与 libpingtunnel.so 启动...")
             if not wait_for_tun(adb, serial, should_exist=True, timeout=20):
                 dump_vpn_log(adb, serial)
@@ -1745,11 +1746,7 @@ def main():
             return pid
 
         def disconnect_and_wait():
-            run_adb(adb, serial, [
-                "shell", "am", "start-foreground-service",
-                "-a", "com.esrrhs.pingtunnel.client.action.DISCONNECT",
-                "-n", "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"
-            ], check=False)
+            run_adb(adb, serial, ["shell", "am", "start-foreground-service", "-a", ACTION_DISCONNECT, "-n", VPN_SERVICE], check=False)
             wait_for_tun(adb, serial, should_exist=False, timeout=10)
 
         first_pid = connect_and_wait()
@@ -1822,11 +1819,7 @@ def main():
 
         # 断开 VPN
         print("==> 断开 pingtunnel VPN...")
-        run_adb(adb, serial, [
-            "shell", "am", "start-foreground-service",
-            "-a", "com.esrrhs.pingtunnel.client.action.DISCONNECT",
-            "-n", "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"
-        ])
+        run_adb(adb, serial, ["shell", "am", "start-foreground-service", "-a", ACTION_DISCONNECT, "-n", VPN_SERVICE])
         wait_for_tun(adb, serial, should_exist=False, timeout=8)
         print("==> pingtunnel 模拟器门禁全部通过（连接/收敛/存活/拆除）！\n")
 
@@ -1836,11 +1829,7 @@ def main():
 
     finally:
         print("==> 清理环境与后台服务...")
-        run_adb(adb, serial, [
-            "shell", "am", "start-foreground-service",
-            "-a", "com.esrrhs.pingtunnel.client.action.DISCONNECT",
-            "-n", "com.esrrhs.pingtunnel.client/.vpn.PingtunnelVpnService"
-        ], check=False)
+        run_adb(adb, serial, ["shell", "am", "start-foreground-service", "-a", ACTION_DISCONNECT, "-n", VPN_SERVICE], check=False)
         tcp_server.stop()
         udp_server.stop()
         h1_server.stop()

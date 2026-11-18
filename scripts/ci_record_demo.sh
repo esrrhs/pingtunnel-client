@@ -9,7 +9,7 @@ set -euxo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 ADB="${ADB:-adb}"
-PKG=com.esrrhs.pingtunnel.client
+PKG=com.esrrhs.pingtunnel.client.debug
 APK="${DEMO_APK:-app/build/outputs/apk/debug/app-debug.apk}"
 PORT=19080
 
