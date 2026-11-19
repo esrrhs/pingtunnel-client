@@ -384,7 +384,7 @@ fun DiagnosticBrowserScreen(
                                 if (internalPipelines.isNotEmpty()) {
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        text = "• 内核连接: ${internalPipelines.size}",
+                                        text = stringResource(R.string.diag_core_connections, internalPipelines.size),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -882,7 +882,7 @@ private fun RecordDetailDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "从回车出发到本请求发起",
+                                    text = stringResource(R.string.diag_trigger_to_request),
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                                     color = ColorTrigger
                                 )
@@ -900,7 +900,7 @@ private fun RecordDetailDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "请求类型 / 协议",
+                                text = stringResource(R.string.diag_request_type_protocol),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -922,7 +922,11 @@ private fun RecordDetailDialog(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "${record.transferSize} bytes (解码 ${record.decodedBodySize} bytes)",
+                                    text = stringResource(
+                                        R.string.diag_transfer_decoded,
+                                        record.transferSize,
+                                        record.decodedBodySize,
+                                    ),
                                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
                                 )
                             }
@@ -935,7 +939,7 @@ private fun RecordDetailDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "SPP 业务连接 (Sonny ID)",
+                                    text = stringResource(R.string.diag_spp_connection),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -951,7 +955,7 @@ private fun RecordDetailDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "SPP 传输协议 / 压缩比",
+                                    text = stringResource(R.string.diag_spp_protocol_compression),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -961,9 +965,9 @@ private fun RecordDetailDialog(
                                     val ratio = (wireBytes.toDouble() / record.transferSize.toDouble())
                                     String.format(Locale.getDefault(), "%.1f%% (%d B / %d B)", ratio * 100, wireBytes, record.transferSize)
                                 } else if (0 > 0) {
-                                    "ZSTD (阈值 ${0}B)"
+                                    stringResource(R.string.diag_zstd_threshold, 0)
                                 } else {
-                                    "未启用压缩"
+                                    stringResource(R.string.diag_compression_disabled)
                                 }
                                 Text(
                                     text = "$protoText · $compressRatioText",
@@ -986,13 +990,13 @@ private fun RecordDetailDialog(
                             .padding(14.dp)
                     ) {
                         Text(
-                            text = "全链路物理时序统一对齐视图",
+                            text = stringResource(R.string.diag_timeline_title),
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "浏览器请求、内核代理运转、Sonny 子通道及 Main 物理隧道包流全部按同一绝对时间轴横向对齐",
+                            text = stringResource(R.string.diag_timeline_description),
                             style = MaterialTheme.typography.bodySmall,
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1036,7 +1040,7 @@ private fun RecordDetailDialog(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "缩放:",
+                                text = stringResource(R.string.diag_zoom),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1056,7 +1060,10 @@ private fun RecordDetailDialog(
                                 onClick = { cropIdleKeepAlive = !cropIdleKeepAlive },
                                 label = {
                                     Text(
-                                        if (cropIdleKeepAlive) "聚焦活跃期: 开" else "聚焦活跃期: 关",
+                                        stringResource(
+                                            if (cropIdleKeepAlive) R.string.diag_focus_active_on
+                                            else R.string.diag_focus_active_off
+                                        ),
                                         fontSize = 11.sp,
                                         fontWeight = if (cropIdleKeepAlive) FontWeight.Bold else FontWeight.Normal
                                     )
@@ -1119,7 +1126,7 @@ private fun RecordDetailDialog(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "0. 预备: 引擎调度/缓存判定/排队准备",
+                                            text = stringResource(R.string.diag_timeline_preparation),
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                             color = ColorDispatch,
                                         )
@@ -1172,7 +1179,7 @@ private fun RecordDetailDialog(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "1. 上层: 浏览器网络时序",
+                                        text = stringResource(R.string.diag_timeline_browser),
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                         color = ColorDns,
                                     )
@@ -1252,7 +1259,10 @@ private fun RecordDetailDialog(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "2. 底层: 内核代理运转 (${if (pipeline.isDirect) "DIRECT" else "TUNNEL"})",
+                                            text = stringResource(
+                                                R.string.diag_timeline_proxy,
+                                                if (pipeline.isDirect) "DIRECT" else "TUNNEL",
+                                            ),
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                             color = ColorInternalTunnel,
                                         )
@@ -1315,12 +1325,12 @@ private fun RecordDetailDialog(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "3. 通道: Sonny 子通道包流 (${pipeline.sonnyId})",
+                                            text = stringResource(R.string.diag_timeline_sonny, pipeline.sonnyId),
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                             color = Color(0xFF00ACC1),
                                         )
                                         Text(
-                                            text = "${sonnyPackets.size} 包",
+                                            text = stringResource(R.string.diag_packet_count, sonnyPackets.size),
                                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
                                             color = Color(0xFF00ACC1),
                                         )
@@ -1344,12 +1354,12 @@ private fun RecordDetailDialog(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "4. 通道: Main 物理隧道复用帧流 (Pingtunnel Tunnel Pipe)",
+                                            text = stringResource(R.string.diag_timeline_main),
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                             color = Color(0xFFFF9800),
                                         )
                                         Text(
-                                            text = "${mainPackets.size} 帧",
+                                            text = stringResource(R.string.diag_frame_count, mainPackets.size),
                                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
                                             color = Color(0xFFFF9800),
                                         )
@@ -1372,15 +1382,15 @@ private fun RecordDetailDialog(
                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        FrameTypeDot(ColorFrameOpen, "OPEN (建连)")
-                                        FrameTypeDot(ColorFrameOpenRsp, "OPENRSP (就绪)")
-                                        FrameTypeDot(ColorFrameDataUp, "DATA (↑上传)")
-                                        FrameTypeDot(ColorFrameDataDown, "DATA (↓下载)")
-                                        FrameTypeDot(ColorFrameClose, "CLOSE (关闭)")
+                                        FrameTypeDot(ColorFrameOpen, stringResource(R.string.diag_frame_open))
+                                        FrameTypeDot(ColorFrameOpenRsp, stringResource(R.string.diag_frame_open_response))
+                                        FrameTypeDot(ColorFrameDataUp, stringResource(R.string.diag_frame_upload))
+                                        FrameTypeDot(ColorFrameDataDown, stringResource(R.string.diag_frame_download))
+                                        FrameTypeDot(ColorFrameClose, stringResource(R.string.diag_frame_close))
                                     }
                                 } else {
                                     Text(
-                                        text = "无对应内核连接记录（可能直接命中浏览器/系统缓存）",
+                                        text = stringResource(R.string.diag_no_pipeline),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 11.sp,
@@ -1410,13 +1420,13 @@ private fun RecordDetailDialog(
 
                         // 发包前的预备开销拆解展示
                         if (record.dispatchDuration > 0) {
-                            DetailTimingRow(ColorDispatch, "UI 点击 -> WebKit 引擎调度 / IPC", record.dispatchDuration)
+                            DetailTimingRow(ColorDispatch, stringResource(R.string.diag_phase_dispatch), record.dispatchDuration)
                         }
                         if (record.cacheOrPrecheckDuration > 0) {
-                            DetailTimingRow(ColorPrecheck, "本地缓存 / HSTS / 策略比对", record.cacheOrPrecheckDuration)
+                            DetailTimingRow(ColorPrecheck, stringResource(R.string.diag_phase_precheck), record.cacheOrPrecheckDuration)
                         }
                         if (record.queueingDuration > 0) {
-                            DetailTimingRow(ColorQueueing, "网络连接池排队 / Socket 准备", record.queueingDuration)
+                            DetailTimingRow(ColorQueueing, stringResource(R.string.diag_phase_queueing), record.queueingDuration)
                         }
                         if (record.dispatchDuration > 0 || record.cacheOrPrecheckDuration > 0 || record.queueingDuration > 0) {
                             HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), thickness = 0.5.dp)
@@ -1454,7 +1464,10 @@ private fun RecordDetailDialog(
                                     color = ColorInternalTunnel,
                                 )
                                 Text(
-                                    text = if (pipeline.isDirect) "本地直连 (DIRECT)" else "Pingtunnel 代理隧道 (TUNNEL)",
+                                    text = stringResource(
+                                        if (pipeline.isDirect) R.string.diag_mode_direct
+                                        else R.string.diag_mode_tunnel
+                                    ),
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = if (pipeline.isDirect) Color(0xFF2E7D32) else Color(0xFFEF6C00),
                                 )
@@ -1462,7 +1475,7 @@ private fun RecordDetailDialog(
                             Spacer(Modifier.height(8.dp))
 
                             DetailTimingRow(ColorInternalRoute, stringResource(R.string.diag_internal_route), pipeline.routeMs.toDouble())
-                            DetailTimingRow(ColorInternalTunnel, if (pipeline.isDirect) "目标 DNS / 本地建连" else stringResource(R.string.diag_internal_tunnel), pipeline.dnsOrConnectMs.toDouble())
+                            DetailTimingRow(ColorInternalTunnel, if (pipeline.isDirect) stringResource(R.string.diag_direct_connect) else stringResource(R.string.diag_internal_tunnel), pipeline.dnsOrConnectMs.toDouble())
                             DetailTimingRow(ColorInternalHandshake, stringResource(R.string.diag_internal_handshake), pipeline.handshakeMs.toDouble())
                             DetailTimingRow(ColorInternalWait, stringResource(R.string.diag_internal_wait), pipeline.waitFirstDataMs.toDouble())
                             DetailTimingRow(ColorInternalPipe, stringResource(R.string.diag_internal_pipe), pipeline.dataTransferMs.toDouble())
@@ -1473,7 +1486,7 @@ private fun RecordDetailDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(text = "传输流量", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(text = stringResource(R.string.diag_traffic), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
                                     text = "↑ ${pipeline.uploadBytes} B  ↓ ${pipeline.downloadBytes} B",
                                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
@@ -1483,7 +1496,7 @@ private fun RecordDetailDialog(
                             if (!pipeline.errorReason.isNullOrBlank()) {
                                 Spacer(Modifier.height(4.dp))
                                 Text(
-                                    text = "错误原因: ${pipeline.errorReason}",
+                                    text = stringResource(R.string.diag_error_reason, pipeline.errorReason.orEmpty()),
                                     style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFE53935)),
                                 )
                             }
@@ -1504,7 +1517,7 @@ private fun RecordDetailDialog(
                                 .padding(14.dp)
                         ) {
                             Text(
-                                text = "内核内部事件轨迹 (${traces.size} 条)",
+                                text = stringResource(R.string.diag_trace_title, traces.size),
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
