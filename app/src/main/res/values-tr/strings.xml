@@ -89,6 +89,7 @@
     <string name="action_qr">QR</string>
     <string name="action_edit">Düzenle</string>
     <string name="action_delete">Sil</string>
+    <string name="action_disconnect">Bağlantıyı kes</string>
     <string name="format_traffic">↑ %1$s ↓ %2$s</string>
     <string name="stats_title">Trafik istatistikleri</string>
     <string name="stats_current_session">Geçerli oturum</string>

@@ -89,6 +89,7 @@
     <string name="action_qr">QR</string>
     <string name="action_edit">संपादित करें</string>
     <string name="action_delete">हटाएँ</string>
+    <string name="action_disconnect">डिस्कनेक्ट करें</string>
     <string name="format_traffic">↑ %1$s ↓ %2$s</string>
     <string name="stats_title">यातायात आँकड़े</string>
     <string name="stats_current_session">वर्तमान सत्र</string>

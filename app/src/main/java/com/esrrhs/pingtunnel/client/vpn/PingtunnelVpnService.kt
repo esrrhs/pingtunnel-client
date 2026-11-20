@@ -839,11 +839,21 @@ class PingtunnelVpnService : VpnService() {
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE,
         )
+        val disconnectIntent = PendingIntent.getForegroundService(
+            this, 0,
+            Intent(this, PingtunnelVpnService::class.java).setAction(ACTION_DISCONNECT),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_pingtunnel)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(text)
             .setContentIntent(contentIntent)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                getString(R.string.action_disconnect),
+                disconnectIntent,
+            )
             .setOnlyAlertOnce(true)
             .setOngoing(true)
             .build()
