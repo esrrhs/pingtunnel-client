@@ -63,6 +63,7 @@
     <string name="toast_invalid_qr">The QR code is not a valid pingtunnel profile</string>
     <string name="toast_imported">Profile imported: %1$s</string>
     <string name="toast_bad_link">The link is not a valid pingtunnel profile</string>
+    <string name="toast_clipboard_empty">No pingtunnel profile link found in the clipboard</string>
     <string name="toast_exported">Exported %1$d profile(s)</string>
     <string name="toast_export_failed">Export failed: %1$s</string>
     <string name="toast_import_empty">No valid profiles found in the file</string>
@@ -88,6 +89,7 @@
     <string name="state_paused">Paused (trusted network)</string>
     <string name="state_error">Error</string>
     <string name="action_add_profile">Add profile</string>
+    <string name="action_from_clipboard">From clipboard</string>
     <string name="empty_profiles_short">No profile selected</string>
     <string name="sheet_choose_profile">Choose profile</string>
     <string name="ping_untested">Not tested</string>

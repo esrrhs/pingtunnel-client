@@ -55,6 +55,7 @@
     <string name="toast_invalid_qr">QR کوڈ ایک درست pingtunnel پروفائل نہیں ہے۔</string>
     <string name="toast_imported">پروفائل درآمد شدہ: %1$s</string>
     <string name="toast_bad_link">لنک ایک درست pingtunnel پروفائل نہیں ہے۔</string>
+    <string name="toast_clipboard_empty">کلپ بورڈ میں کوئی pingtunnel پروفائل لنک نہیں ملا۔</string>
     <string name="toast_exported">برآمد شدہ %1$d پروفائل</string>
     <string name="toast_export_failed">برآمد ناکام: %1$s</string>
     <string name="toast_import_empty">فائل میں کوئی درست پروفائلز نہیں ملے</string>
@@ -77,6 +78,7 @@
     <string name="state_paused">موقوف (قابل اعتماد نیٹ ورک)</string>
     <string name="state_error">خرابی</string>
     <string name="action_add_profile">پروفائل شامل کریں۔</string>
+    <string name="action_from_clipboard">کلپ بورڈ سے</string>
     <string name="empty_profiles_short">کوئی پروفائل منتخب نہیں کیا گیا۔</string>
     <string name="sheet_choose_profile">پروفائل کا انتخاب کریں۔</string>
     <string name="ping_untested">ٹیسٹ نہیں کیا گیا۔</string>

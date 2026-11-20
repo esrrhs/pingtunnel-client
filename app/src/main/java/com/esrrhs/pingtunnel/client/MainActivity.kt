@@ -1,6 +1,7 @@
 package com.esrrhs.pingtunnel.client
 
 import android.Manifest
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -71,17 +72,7 @@ class MainActivity : ComponentActivity() {
     private val scanLauncher = registerForActivityResult(ScanContract()) { result ->
         val contents = result.contents
         if (contents.isNullOrBlank()) return@registerForActivityResult
-        val profile = ProfileShare.decode(contents)
-        val error = profile?.validate()
-        when {
-            profile == null -> toast(getString(R.string.toast_invalid_qr))
-            error != null ->
-                toast(com.esrrhs.pingtunnel.client.util.ValidationMessages.text(this, error))
-            else -> {
-                viewModel.importScanned(profile)
-                toast(getString(R.string.toast_imported, profile.name))
-            }
-        }
+        importProfileLink(contents, R.string.toast_invalid_qr)
     }
 
     /** 导出全部配置到用户选择的文件。 */
@@ -284,6 +275,7 @@ class MainActivity : ComponentActivity() {
                         onImport = {
                             importLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
                         },
+                        onImportFromClipboard = ::importFromClipboard,
                         onExport = { exportLauncher.launch("pingtunnel-profiles.json") },
                         onTestPing = { id ->
                             viewModel.testPing(id) { ms ->
@@ -321,6 +313,22 @@ class MainActivity : ComponentActivity() {
             .setBeepEnabled(false)
             .setOrientationLocked(false)
         scanLauncher.launch(options)
+    }
+
+    private fun importFromClipboard() {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = clipboard.primaryClip
+        val text = clip
+            ?.takeIf { it.itemCount > 0 }
+            ?.getItemAt(0)
+            ?.coerceToText(this)
+            ?.toString()
+            ?.trim()
+        if (text.isNullOrBlank()) {
+            toast(getString(R.string.toast_clipboard_empty))
+            return
+        }
+        importProfileLink(text, R.string.toast_bad_link)
     }
 
     /** 列表点击：正在使用的配置 → 断开；其他配置 → 校验权限后连接。 */
@@ -368,12 +376,16 @@ class MainActivity : ComponentActivity() {
     private fun handleProfileLink(intent: Intent?) {
         if (intent?.action != Intent.ACTION_VIEW) return
         val text = intent.dataString ?: return
+        importProfileLink(text, R.string.toast_bad_link)
+    }
+
+    private fun importProfileLink(text: String, invalidMessageRes: Int) {
         val profile = ProfileShare.decode(text)
         val error = profile?.validate()
         when {
-            profile == null -> toast(getString(R.string.toast_bad_link))
+            profile == null -> toast(getString(invalidMessageRes))
             error != null ->
-                toast(com.esrrhs.pingtunnel.client.util.ValidationMessages.text(this, error))
+                toast(ValidationMessages.text(this, error))
             else -> {
                 viewModel.importScanned(profile)
                 toast(getString(R.string.toast_imported, profile.name))

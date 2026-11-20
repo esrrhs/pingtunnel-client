@@ -55,6 +55,7 @@
     <string name="toast_invalid_qr">کد QR یک نمایه pingtunnel معتبر نیست</string>
     <string name="toast_imported">نمایه وارد شده: %1$s</string>
     <string name="toast_bad_link">پیوند یک نمایه pingtunnel معتبر نیست</string>
+    <string name="toast_clipboard_empty">پیوند نمایه pingtunnel در کلیپ‌بورد یافت نشد</string>
     <string name="toast_exported">نمایه(های) %1$d صادر شد</string>
     <string name="toast_export_failed">صادر نشد: %1$s</string>
     <string name="toast_import_empty">هیچ نمایه معتبری در فایل یافت نشد</string>
@@ -77,6 +78,7 @@
     <string name="state_paused">متوقف شد (شبکه مورد اعتماد)</string>
     <string name="state_error">خطا</string>
     <string name="action_add_profile">افزودن نمایه</string>
+    <string name="action_from_clipboard">از کلیپ‌بورد</string>
     <string name="empty_profiles_short">هیچ نمایه ای انتخاب نشده است</string>
     <string name="sheet_choose_profile">پروفایل را انتخاب کنید</string>
     <string name="ping_untested">تست نشده</string>

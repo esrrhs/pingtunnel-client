@@ -55,6 +55,7 @@
     <string name="toast_invalid_qr">QR कोड मान्य pingtunnel प्रोफ़ाइल नहीं है</string>
     <string name="toast_imported">प्रोफ़ाइल आयातित: %1$s</string>
     <string name="toast_bad_link">लिंक मान्य pingtunnel प्रोफ़ाइल नहीं है</string>
+    <string name="toast_clipboard_empty">क्लिपबोर्ड में कोई pingtunnel प्रोफ़ाइल लिंक नहीं मिला</string>
     <string name="toast_exported">निर्यातित %1$d प्रोफ़ाइल</string>
     <string name="toast_export_failed">निर्यात विफल: %1$s</string>
     <string name="toast_import_empty">फ़ाइल में कोई मान्य प्रोफ़ाइल नहीं मिली</string>
@@ -77,6 +78,7 @@
     <string name="state_paused">रोका गया (विश्वसनीय नेटवर्क)</string>
     <string name="state_error">त्रुटि</string>
     <string name="action_add_profile">प्रोफ़ाइल जोड़ें</string>
+    <string name="action_from_clipboard">क्लिपबोर्ड से</string>
     <string name="empty_profiles_short">कोई प्रोफ़ाइल चयनित नहीं</string>
     <string name="sheet_choose_profile">प्रोफ़ाइल चुनें</string>
     <string name="ping_untested">परीक्षण नहीं किया गया</string>

@@ -55,6 +55,7 @@
     <string name="toast_invalid_qr">Mã QR không phải là hồ sơ pingtunnel hợp lệ</string>
     <string name="toast_imported">Hồ sơ đã được nhập: %1$s</string>
     <string name="toast_bad_link">Liên kết không phải là hồ sơ pingtunnel hợp lệ</string>
+    <string name="toast_clipboard_empty">Không tìm thấy liên kết hồ sơ pingtunnel trong bảng nhớ tạm</string>
     <string name="toast_exported">Đã xuất %1$d hồ sơ</string>
     <string name="toast_export_failed">Xuất không thành công: %1$s</string>
     <string name="toast_import_empty">Không tìm thấy hồ sơ hợp lệ trong tệp</string>
@@ -77,6 +78,7 @@
     <string name="state_paused">Đã tạm dừng (mạng đáng tin cậy)</string>
     <string name="state_error">Lỗi</string>
     <string name="action_add_profile">Thêm hồ sơ</string>
+    <string name="action_from_clipboard">Từ bảng nhớ tạm</string>
     <string name="empty_profiles_short">Không có hồ sơ nào được chọn</string>
     <string name="sheet_choose_profile">Chọn hồ sơ</string>
     <string name="ping_untested">Chưa được kiểm tra</string>

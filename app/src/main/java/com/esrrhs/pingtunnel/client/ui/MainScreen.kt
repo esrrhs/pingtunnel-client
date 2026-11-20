@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
@@ -105,6 +106,7 @@ fun MainScreen(
     onSettings: () -> Unit,
     onScan: () -> Unit,
     onImport: () -> Unit,
+    onImportFromClipboard: () -> Unit,
     onExport: () -> Unit,
     onTestPing: (String) -> Unit,
     onShowStats: () -> Unit,
@@ -155,6 +157,7 @@ fun MainScreen(
                             expanded = menuExpanded,
                             onDismiss = { menuExpanded = false },
                             onImport = onImport,
+                            onImportFromClipboard = onImportFromClipboard,
                             onExport = onExport,
                             onConnections = onShowConnections,
                             onHistory = onShowHistory,
@@ -272,6 +275,7 @@ private fun OverflowMenu(
     expanded: Boolean,
     onDismiss: () -> Unit,
     onImport: () -> Unit,
+    onImportFromClipboard: () -> Unit,
     onExport: () -> Unit,
     onConnections: () -> Unit,
     onHistory: () -> Unit,
@@ -280,6 +284,10 @@ private fun OverflowMenu(
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         MenuItem(Icons.Filled.FileDownload, R.string.action_import) { onImport(); onDismiss() }
+        MenuItem(Icons.Filled.ContentPaste, R.string.action_from_clipboard) {
+            onImportFromClipboard()
+            onDismiss()
+        }
         MenuItem(Icons.Filled.FileUpload, R.string.action_export) { onExport(); onDismiss() }
         HorizontalDivider()
         MenuItem(Icons.Filled.Lan, R.string.action_connections) { onConnections(); onDismiss() }
