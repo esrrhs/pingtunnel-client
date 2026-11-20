@@ -21,6 +21,12 @@
   </a>
 </p>
 
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.esrrhs.pingtunnel.client">
+    <img src="docs/assets/google-play-badge.png" alt="Get it on Google Play" height="60">
+  </a>
+</p>
+
 An official Android client for **[pingtunnel](https://github.com/esrrhs/pingtunnel)** that encapsulates TCP and UDP traffic inside standard ICMP echo (ping) packets to break through restrictive firewalls and ISP throttles.
 
 ▶ **[Demo video](https://esrrhs.github.io/pingtunnel-client/demo.html)** · **[Privacy policy](https://esrrhs.github.io/pingtunnel-client/)**
