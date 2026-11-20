@@ -89,6 +89,7 @@
     <string name="action_qr">QR</string>
     <string name="action_edit">تحرير</string>
     <string name="action_delete">حذف</string>
+    <string name="action_disconnect">قطع الاتصال</string>
     <string name="format_traffic">↑ %1$s ↓ %2$s</string>
     <string name="stats_title">احصائيات المرور</string>
     <string name="stats_current_session">الجلسة الحالية</string>
