@@ -12,6 +12,8 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -63,6 +65,15 @@ class PingtunnelVpnService : VpnService() {
      */
     private val lifecycleGate = Any()
     private val connectQueue = VpnConnectQueue()
+
+    /**
+     * Most recent [onStartCommand] startId. Only read/written while holding [lifecycleGate],
+     * together with promote-to-foreground and [VpnServiceCleanup.applyIfCurrent].
+     */
+    private var latestStartId = 0
+
+    /** Serializes deferred cleanup onto the main thread (teardown runs on IO). */
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     private var coreProcess: PingtunnelProcess? = null
     private var tunInterface: ParcelFileDescriptor? = null
@@ -140,7 +151,7 @@ class PingtunnelVpnService : VpnService() {
         when (intent?.action) {
             ACTION_DISCONNECT -> {
                 overrideProfile = null
-                requestDisconnect()
+                requestDisconnect(startId)
             }
             // ACTION_CONNECT / null（系统重建 Service）
             else -> {
@@ -150,7 +161,7 @@ class PingtunnelVpnService : VpnService() {
                         profileJson.decodeFromString(Profile.serializer(), rawJson)
                     }.getOrNull()
                 }
-                requestConnect()
+                requestConnect(startId)
             }
         }
         return START_NOT_STICKY
@@ -184,36 +195,56 @@ class PingtunnelVpnService : VpnService() {
         super.onDestroy()
     }
 
-    private fun requestConnect() {
-        val command = synchronized(lifecycleGate) {
-            val command = connectQueue.onConnect(VpnStateHolder.state.value)
-            if (command == ConnectCommand.START) {
+    private fun requestConnect(startId: Int) {
+        var shouldLaunch = false
+        synchronized(lifecycleGate) {
+            latestStartId = startId
+            val prior = VpnStateHolder.state.value
+            val plan = VpnStartCommandFlow.planConnect(connectQueue, prior)
+            if (plan.command == ConnectCommand.START) {
                 VpnStateHolder.set(VpnState.Connecting)
             }
-            command
+            // Promote under the same lock as latestStartId so a stale teardown
+            // cannot stopForeground between our id bump and startForeground.
+            VpnStartCommandFlow.executeConnect(
+                plan = plan,
+                acker = { notice -> startAsForeground(noticeText(notice)) },
+                onStart = { shouldLaunch = true },
+                onQueued = { Log.i(TAG, "connect queued until teardown finishes") },
+            )
         }
-        when (command) {
-            ConnectCommand.QUEUE ->
-                Log.i(TAG, "connect queued until teardown finishes")
-            ConnectCommand.IGNORE -> Unit
-            ConnectCommand.START -> {
-                startAsForeground(getString(R.string.notif_connecting))
-                scope.launch { connect() }
-            }
-        }
+        if (shouldLaunch) scope.launch { connect() }
     }
 
-    private fun requestDisconnect() {
-        val startTeardown = synchronized(lifecycleGate) {
-            val start = connectQueue.onDisconnect(VpnStateHolder.state.value)
-            if (start) VpnStateHolder.set(VpnState.Disconnecting)
-            start
+    private fun requestDisconnect(startId: Int) {
+        var startTeardown = false
+        synchronized(lifecycleGate) {
+            latestStartId = startId
+            val state = VpnStateHolder.state.value
+            val plan = VpnStartCommandFlow.planDisconnect(connectQueue, state)
+            if (plan.disposition == DisconnectDisposition.StartTeardown) {
+                VpnStateHolder.set(VpnState.Disconnecting)
+            }
+            VpnStartCommandFlow.executeDisconnect(
+                plan = plan,
+                acker = { notice -> startAsForeground(noticeText(notice)) },
+                onStartTeardown = { startTeardown = true },
+                onStopIdle = {
+                    // Still holding lifecycleGate: skip remove if a newer start raced in.
+                    VpnServiceCleanup.applyIfCurrent(
+                        expectedStartId = startId,
+                        latestStartId = latestStartId,
+                        removeForeground = { stopForeground(STOP_FOREGROUND_REMOVE) },
+                        stopSelf = { sid -> stopSelf(sid) },
+                    )
+                },
+            )
         }
-        if (!startTeardown) return
-        // 用户主动断开：取消可能进行中的自动重连
-        reconnectJob?.cancel()
-        startAsForeground(getString(R.string.notif_disconnecting))
-        scope.launch { teardown(notifyDisconnected = true) }
+        if (startTeardown) {
+            // 用户主动断开：取消可能进行中的自动重连
+            reconnectJob?.cancel()
+            scope.launch { teardown(notifyDisconnected = true) }
+        }
     }
 
     private suspend fun connect() = withContext(Dispatchers.IO) {
@@ -522,7 +553,7 @@ class PingtunnelVpnService : VpnService() {
             trustedWifiMonitor.stop()
             stopDataPlaneAndCount()
             persistSessionTraffic()
-            val follow = synchronized(lifecycleGate) {
+            val (follow, stopStartId) = synchronized(lifecycleGate) {
                 val follow = if (honorQueue) {
                     connectQueue.takeFollowUp(failed = errorMessage != null)
                 } else {
@@ -531,6 +562,7 @@ class PingtunnelVpnService : VpnService() {
                 }
                 if (follow) {
                     VpnStateHolder.set(VpnState.Connecting)
+                    true to -1
                 } else {
                     when {
                         errorMessage != null -> VpnStateHolder.set(VpnState.Error(errorMessage))
@@ -538,15 +570,20 @@ class PingtunnelVpnService : VpnService() {
                             VpnStateHolder.state.value !is VpnState.Error ->
                             VpnStateHolder.set(VpnState.Disconnected)
                     }
+                    // Capture under the same lock as takeFollowUp. Cleanup re-checks
+                    // latestStartId on the main thread before any stopForeground.
+                    false to latestStartId
                 }
-                follow
             }
-            if (!follow) finishService()
+            if (!follow) finishService(stopStartId)
             follow
         }
         if (followUp) {
             Log.i(TAG, "connect resumed after teardown")
-            startAsForeground(getString(R.string.notif_connecting))
+            // Re-ack under the gate so it cannot race a concurrent stale cleanup.
+            synchronized(lifecycleGate) {
+                startAsForeground(getString(R.string.notif_connecting))
+            }
             connect()
         }
     }
@@ -590,9 +627,40 @@ class PingtunnelVpnService : VpnService() {
         activeProfileId = null
     }
 
-    private fun finishService() {
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+    /**
+     * Tear down foreground + service only if [expectedStartId] is still the latest.
+     * Always runs the remove/stop pair on the main thread under [lifecycleGate]; a stale
+     * teardown must skip BOTH [stopForeground] and [stopSelf] (stopSelf alone cannot
+     * undo a prior remove of a newer CONNECT's notification).
+     */
+    private fun finishService(expectedStartId: Int = -1) {
+        val id = if (expectedStartId >= 0) {
+            expectedStartId
+        } else {
+            synchronized(lifecycleGate) { latestStartId }
+        }
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            finishServiceOnMain(id)
+        } else {
+            mainHandler.post { finishServiceOnMain(id) }
+        }
+    }
+
+    private fun finishServiceOnMain(expectedStartId: Int) {
+        synchronized(lifecycleGate) {
+            val applied = VpnServiceCleanup.applyIfCurrent(
+                expectedStartId = expectedStartId,
+                latestStartId = latestStartId,
+                removeForeground = { stopForeground(STOP_FOREGROUND_REMOVE) },
+                stopSelf = { sid -> stopSelf(sid) },
+            )
+            if (!applied) {
+                Log.i(
+                    TAG,
+                    "skip stale service cleanup expected=$expectedStartId latest=$latestStartId",
+                )
+            }
+        }
     }
 
     /** 读取当前选中配置；不存在有效配置时抛错。 */
@@ -657,6 +725,19 @@ class PingtunnelVpnService : VpnService() {
             NotificationManager.IMPORTANCE_LOW,
         )
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
+    private fun noticeText(notice: VpnForegroundNotice): String = when (notice) {
+        VpnForegroundNotice.Connecting -> getString(R.string.notif_connecting)
+        VpnForegroundNotice.Disconnecting -> getString(R.string.notif_disconnecting)
+        VpnForegroundNotice.Connected -> {
+            val name = currentProfileName
+            if (name.isNullOrBlank()) {
+                getString(R.string.tile_connected)
+            } else {
+                getString(R.string.notif_connected, name)
+            }
+        }
     }
 
     private fun startAsForeground(text: String) {

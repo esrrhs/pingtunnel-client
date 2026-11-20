@@ -15,6 +15,21 @@ class VpnConnectQueueTest {
     }
 
     @Test
+    fun connectWhileDisconnecting_flowPromotesThenQueues() {
+        // Service wires the same plan/execute pair; keep queue+flow coupled here.
+        val queue = VpnConnectQueue()
+        val plan = VpnStartCommandFlow.planConnect(queue, VpnState.Disconnecting)
+        val events = mutableListOf<String>()
+        VpnStartCommandFlow.executeConnect(
+            plan = plan,
+            acker = { events += "ack" },
+            onStart = {},
+            onQueued = { events += "queued" },
+        )
+        assertEquals(listOf("ack", "queued"), events)
+    }
+
+    @Test
     fun disconnectAfterQueue_cancelsTheFollowUp() {
         val queue = VpnConnectQueue()
         queue.onConnect(VpnState.Disconnecting)
