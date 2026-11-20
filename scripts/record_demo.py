@@ -31,8 +31,8 @@ ADB = os.environ.get("ADB") or next(
     ) if p == "adb" or os.path.exists(p)),
     "adb",
 )
-PKG = "com.esrrhs.pingtunnel.client"
-ACT = PKG + "/.MainActivity"
+PKG = "com.esrrhs.pingtunnel.client.debug"
+ACT = PKG + "/com.esrrhs.pingtunnel.client.MainActivity"
 CHROME = "com.android.chrome/com.google.android.apps.chrome.Main"
 SITE_URL = os.environ.get("DEMO_SITE_URL", "http://10.0.2.2:19080/")
 PROFILE_NAME = "PingTunnel Demo"
