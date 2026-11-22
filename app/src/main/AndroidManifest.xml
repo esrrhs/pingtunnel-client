@@ -38,6 +38,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
             <!-- pingtunnel://<base64> 配置分享链接（扫码/文本/网页同格式） -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
