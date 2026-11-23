@@ -100,6 +100,7 @@
     <string name="action_qr">QR</string>
     <string name="action_edit">Edit</string>
     <string name="action_delete">Delete</string>
+    <string name="action_disconnect">Disconnect</string>
     <string name="format_traffic">↑ %1$s    ↓ %2$s</string>
 
     <!-- Stats screen -->

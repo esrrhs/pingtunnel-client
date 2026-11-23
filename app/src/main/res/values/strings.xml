@@ -100,6 +100,7 @@
     <string name="action_qr">二维码</string>
     <string name="action_edit">编辑</string>
     <string name="action_delete">删除</string>
+    <string name="action_disconnect">断开</string>
     <string name="format_traffic">↑ %1$s    ↓ %2$s</string>
 
     <!-- 流量统计页 -->

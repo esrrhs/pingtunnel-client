@@ -89,6 +89,7 @@
     <string name="action_qr">QR</string>
     <string name="action_edit">Редактировать</string>
     <string name="action_delete">Удалить</string>
+    <string name="action_disconnect">Отключить</string>
     <string name="format_traffic">↑ %1$s ↓ %2$s</string>
     <string name="stats_title">Статистика трафика</string>
     <string name="stats_current_session">Текущая сессия</string>
